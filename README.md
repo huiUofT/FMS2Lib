@@ -2,9 +2,6 @@
 
 MS2 prediction for fluorinated compounds (formula / ranker workflows in this export).
 
-Snapshot of `f-paper/py文件` **subfolders only** (no loose files at `py文件/` root). Excludes `msbuddy copy/`.
-
-**Convention:** only third-party **MSBuddy** lives under `src/`. Your workflows (**calibration**, **netural_loss**, **train**, **eval**) are under ``script/formula_prediction/``.
 
 ## Layout
 
