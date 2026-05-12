@@ -6,12 +6,6 @@ Snapshot of `f-paper/py文件` **subfolders only** (no loose files at `py文件/
 
 **Convention:** only third-party **MSBuddy** lives under `src/`. Your workflows (**calibration**, **netural_loss**, **train**, **eval**) are under ``script/formula_prediction/``.
 
-Regenerate from `f-paper/github`:
-
-```bash
-python sync_from_py_folder.py
-```
-
 ## Layout
 
 | Path | Contents |
