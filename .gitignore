@@ -1,0 +1,21 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+.env
+build/
+dist/
+
+# Regenerated calibration spectra (run clean.py locally if needed)
+script/formula_prediction/calibration/*.mgf
+
+# Local runs (--repo-root GITHUB_ROOT, outputs under scratch/)
+scratch/
+
+# Large MsBuddy DBs (auto-download on first import; see src/msbuddy/load.py)
+src/msbuddy/data/*.joblib
