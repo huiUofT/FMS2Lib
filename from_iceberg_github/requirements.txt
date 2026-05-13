@@ -1,0 +1,32 @@
+# Pip-style stack aligned with ``iceberg/activate_env.sh`` import checks and
+# ``github/sh/retrain_ficeberg_split1_newloc.py`` (train_gen → predict_gen →
+# add_dag_intens → train_inten). Code lives under ``github/src/ms_pred``.
+#
+# Recommended on your machines: still use the full venv + modules path:
+#   cd …/iceberg && source activate_env.sh && cd github && bash sh/retrain_ficeberg_split1_newloc.sh
+#
+# Bare ``pip`` / new machine:
+#   1) Install a CUDA-matched ``torch`` from https://pytorch.org/get-started/locally/
+#   2) Install ``dgl`` and ``torch-geometric`` (and PyG wheels like torch-scatter)
+#      built for that exact torch+cuda — conda or https://www.dgl.ai/pages/start.html
+#      and https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html
+#   3) pip install -r requirements.txt
+#
+# RDKit: ``conda install -c conda-forge rdkit`` is often simpler than pip on HPC.
+
+numpy>=1.20
+pandas>=1.3
+PyYAML>=6
+h5py>=3.0
+tqdm>=4.0
+multiprocess>=0.70
+pyarrow>=10
+einops>=0.4
+networkx>=2.6
+pytorch-lightning>=1.6,<2.0
+
+torch
+dgl
+torch-geometric
+
+rdkit>=2022.9.1
