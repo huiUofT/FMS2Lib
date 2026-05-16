@@ -11,10 +11,12 @@ from rdkit import Chem
 import re
 
 
-_SCRIPT_DIR = Path(__file__).resolve().parent
-_GITHUB_DIR = _SCRIPT_DIR.parent
-_DEFAULT_GEN_CKPT = _GITHUB_DIR / "mode" / "generation" / "best.ckpt"
-_DEFAULT_INTEN_CKPT = _GITHUB_DIR / "mode" / "intensity" / "best.ckpt"
+from foriceberg_paths import mode_dir, repo_root, script_dir, src_dir
+
+_SCRIPT_DIR = script_dir()
+_GITHUB_DIR = repo_root()
+_DEFAULT_GEN_CKPT = mode_dir() / "generation" / "best.ckpt"
+_DEFAULT_INTEN_CKPT = mode_dir() / "intensity" / "best.ckpt"
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,7 +46,7 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument(
 		"--predict-script",
 		type=Path,
-		default=_GITHUB_DIR / "src" / "ms_pred" / "dag_pred" / "predict_eval_end2end_pubchem_candidates_cosine.py",
+		default=src_dir() / "ms_pred" / "dag_pred" / "predict_eval_end2end_pubchem_candidates_cosine.py",
 		help="End2end prediction + cosine driver (under github/src/ms_pred/dag_pred/)",
 	)
 	parser.add_argument("--batch-size", type=int, default=32)

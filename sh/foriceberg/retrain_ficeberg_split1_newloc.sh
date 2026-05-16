@@ -1,6 +1,6 @@
 #!/bin/bash
 # Portable: only uses paths under this ``github/`` tree (suitable for uploading ``github/`` to GitHub.com).
-# Dataset: ``github/data/spec_datasets/F_ICEBERG_dataset/`` — see ../data/README.md
+# Dataset: ``github/data/spec_datasets/F_ICEBERG_dataset/`` — see ../README.md (Data layout)
 #
 # Optional ICEBERG venv (full checkout): **does not** auto-source parent ``activate_env.sh``
 # (that lives outside ``github/``). To load it from this wrapper:
@@ -16,7 +16,9 @@
 #   5) ``python`` on PATH (often the venv after activation)
 #   6) python3
 set -euo pipefail
-GITHUB_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# FMS2Lib repo root (parent of sh/foriceberg/)
+GITHUB_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+FORICEBERG_SCRIPT="${GITHUB_ROOT}/script/foriceberg"
 
 ACTIVATE_SCRIPT="${ICEBERG_ACTIVATE_SCRIPT:-${GITHUB_ROOT}/../activate_env.sh}"
 if [[ "${ICEBERG_SKIP_ACTIVATE:-0}" == "1" ]]; then
@@ -44,4 +46,4 @@ fi
 
 export ICEBERG_PYTHON="${PYTHON_BIN}"
 echo "[retrain] python=${PYTHON_BIN}" >&2
-exec "${PYTHON_BIN}" "${GITHUB_ROOT}/script/run_retrain_ficeberg_split1_newloc.py" "$@"
+exec "${PYTHON_BIN}" "${FORICEBERG_SCRIPT}/run_retrain_ficeberg_split1_newloc.py" "$@"

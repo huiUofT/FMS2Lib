@@ -6,10 +6,10 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-# Portable ``github/`` root (github/script/this_file -> parents[1]); code in ``github/src``.
-_GITHUB_ROOT = Path(__file__).resolve().parents[1]
-if str(_GITHUB_ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(_GITHUB_ROOT / "src"))
+from foriceberg_paths import data_dir, github_root, pythonpath_src, repo_root
+
+if str(pythonpath_src()) not in sys.path:
+    sys.path.insert(0, pythonpath_src())
 
 import numpy as np
 import pandas as pd
@@ -215,11 +215,12 @@ def main():
 
     args = parser.parse_args()
 
-    os.chdir(_GITHUB_ROOT)
+    root = repo_root()
+    os.chdir(root)
 
-    data_dir = Path("data/spec_datasets") / args.dataset_name
-    data_dir.mkdir(parents=True, exist_ok=True)
-    (data_dir / "splits").mkdir(exist_ok=True)
+    out_data = data_dir() / "spec_datasets" / args.dataset_name
+    out_data.mkdir(parents=True, exist_ok=True)
+    (out_data / "splits").mkdir(exist_ok=True)
 
     print("=" * 80)
     print(f"Dataset: {args.dataset_name} (with #parentmass)")
@@ -227,24 +228,24 @@ def main():
 
     spectra = parse_mgf_file(args.mgf_file)
 
-    labels_path = data_dir / "labels.tsv"
+    labels_path = out_data / "labels.tsv"
     df = create_labels_tsv(spectra, labels_path)
 
-    spec_files_path = data_dir / "spec_files.hdf5"
+    spec_files_path = out_data / "spec_files.hdf5"
     create_spec_files_hdf5(spectra, spec_files_path)
 
     split_df, train_inds, val_inds, test_inds = stratified_split_by_f_count(
         df, args.train_frac, args.val_frac, args.test_frac, args.seed
     )
 
-    split_path = data_dir / "splits" / f"split_{args.seed}.tsv"
+    split_path = out_data / "splits" / f"split_{args.seed}.tsv"
     split_df.to_csv(split_path, sep="\t", index=False)
     print(f"\nSaved split file: {split_path}")
 
     print("\n" + "=" * 80)
     print("Done.")
     print("=" * 80)
-    print(f"Output directory: {data_dir}")
+    print(f"Output directory: {out_data}")
     print(f"labels.tsv:       {labels_path}")
     print(f"spec_files.hdf5:  {spec_files_path}")
     print(f"split TSV:        {split_path}")

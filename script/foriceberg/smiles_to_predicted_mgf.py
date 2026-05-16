@@ -18,9 +18,11 @@ from rdkit import Chem, RDLogger
 RDLogger.DisableLog("rdApp.*")
 
 # `github/` root (this file lives under `github/script/`)
-REPO_ROOT = Path(__file__).resolve().parents[1]
-_DEFAULT_GEN_CKPT = REPO_ROOT / "mode" / "generation" / "best.ckpt"
-_DEFAULT_INTEN_CKPT = REPO_ROOT / "mode" / "intensity" / "best.ckpt"
+from foriceberg_paths import github_root, mode_dir, pythonpath_src, repo_root
+
+REPO_ROOT = repo_root()
+_DEFAULT_GEN_CKPT = mode_dir() / "generation" / "best.ckpt"
+_DEFAULT_INTEN_CKPT = mode_dir() / "intensity" / "best.ckpt"
 
 
 def parse_args() -> argparse.Namespace:
@@ -106,7 +108,7 @@ def validate_smiles(s: str) -> str:
 
 
 def precursor_mz_for_smiles(smi: str, adduct: str) -> float:
-    sys.path.insert(0, str(REPO_ROOT / "src"))
+    sys.path.insert(0, pythonpath_src())
     import ms_pred.common as common
     from ms_pred.common import chem_utils
 
@@ -178,7 +180,7 @@ def run_predictor(
         cmd.insert(2, "--gpu")
 
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(REPO_ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = pythonpath_src() + os.pathsep + env.get("PYTHONPATH", "")
 
     subprocess.run(cmd, cwd=str(REPO_ROOT), env=env, check=True)
     out_h5 = save_dir / "preds.hdf5"
@@ -276,7 +278,7 @@ def main() -> None:
     except (ValueError, SyntaxError) as e:
         sys.exit(f"--collision-energies must be a Python literal list; parse error: {e}")
 
-    sys.path.insert(0, str(REPO_ROOT / "src"))
+    sys.path.insert(0, pythonpath_src())
 
     with tempfile.TemporaryDirectory(prefix="mgf_pred_") as tmpd:
         tmpdir = Path(tmpd)

@@ -96,6 +96,8 @@ For all flags, run `python <script.py> --help`.
 
 ## Dependencies
 
+One file covers **MSBuddy / formula_prediction** and **ICEBERG foriceberg** (see comments in the file). For ICEBERG, install CUDA-matched **torch / dgl / PyG** first when you need GPU training.
+
 ```bash
 pip install -r requirements.txt
 pip install -e .   # registers ``msbuddy`` from ``src/`` (editable)
@@ -104,3 +106,80 @@ pip install -e .   # registers ``msbuddy`` from ``src/`` (editable)
 **MsBuddy data (`src/msbuddy/data/*.joblib`):** these files are **not** stored in the repo (GitHub file-size limit). On first use, `msbuddy` downloads `common_db_v0.2.4.joblib` and `formula_db_v0.2.4.joblib` from the upstream release URLs in `src/msbuddy/load.py` (~416 MB for the formula DB). Ensure network access for the first run.
 
 Longer docs (Chinese/English) and per-folder READMEs remain under `f-paper/py文件/` in the main repository.
+
+---
+
+## ICEBERG / `foriceberg` (MS/MS prediction & retrain)
+
+Portable ICEBERG workflows live under **`*/foriceberg/`** subfolders (not a separate top-level tree). Code: **`src/foriceberg/ms_pred`**. Scripts: **`script/foriceberg/`**. Data: **`data/foriceberg/spec_datasets/`**. Checkpoints: **`mode/foriceberg/`**. Shell: **`sh/foriceberg/`**.
+
+### Layout
+
+```text
+FMS2Lib/
+  script/foriceberg/     # run.py, drivers, results/ (created at train time)
+  src/foriceberg/ms_pred/
+  data/foriceberg/spec_datasets/<dataset>/
+  mode/foriceberg/generation|intensity/best.ckpt
+  sh/foriceberg/retrain_ficeberg_split1_newloc.sh
+  sh/foriceberg/run_predict_testset_inten.sh
+  sh/foriceberg/run_evaluate_testset_cosine.sh
+```
+
+### Environment
+
+```bash
+export FMS2LIB=/path/to/FMS2Lib
+cd "${FMS2LIB}"
+export PYTHONPATH="${FMS2LIB}/src/foriceberg:${PYTHONPATH:-}"
+# Optional override:
+# export ICEBERG_GITHUB_ROOT="${FMS2LIB}"
+```
+
+**Dependencies:** same root **`requirements.txt`** (ICEBERG section) or parent ICEBERG `activate_env.sh`.
+
+### Data (`data/foriceberg/spec_datasets/F_ICEBERG_dataset/`)
+
+Needs: `labels.tsv`, `spec_files.hdf5`, `splits/split_1.tsv`, `magma_outputs/magma_tree.hdf5`, `subformulae/no_subform.hdf5` (symlink large data if needed):
+
+```bash
+mkdir -p "${FMS2LIB}/data/foriceberg/spec_datasets"
+ln -sfn /path/to/iceberg/data/spec_datasets/F_ICEBERG_dataset \
+  "${FMS2LIB}/data/foriceberg/spec_datasets/F_ICEBERG_dataset"
+```
+
+### Unified CLI
+
+```bash
+cd "${FMS2LIB}"
+python script/foriceberg/run.py                  # list commands
+python script/foriceberg/run.py <cmd> --help
+```
+
+| Command | Purpose |
+|---------|---------|
+| `process-dataset` | MGF → `data/foriceberg/spec_datasets/<name>/` |
+| `magma` | → `magma_outputs/magma_tree.hdf5` |
+| `retrain` | F_ICEBERG split_1 retrain (or `bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh`) |
+| `predict-eval` | test labels → preds + cosine eval (or two-step: `sh/foriceberg/run_predict_testset_inten.sh` + `run_evaluate_testset_cosine.sh`) |
+| `smiles2mgf` / `end2end` / `retrieval-eval` / `blind-retrieval` / `pubchem-top100` | see `python script/foriceberg/run.py` |
+
+### Typical pipeline
+
+1. `python script/foriceberg/run.py process-dataset --mgf-file ... --dataset-name ...`
+2. `python script/foriceberg/run.py magma --spectra-dir data/foriceberg/spec_datasets/.../spec_files.hdf5 ...`
+3. `bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh`
+4. `python script/foriceberg/run.py predict-eval --dataset-labels data/foriceberg/spec_datasets/.../testset_split_1_labels.tsv ...`
+
+Example **predict-eval** (paths relative to **`FMS2LIB`** root):
+
+```bash
+python script/foriceberg/run.py predict-eval \
+  --dataset-labels data/foriceberg/spec_datasets/F_ICEBERG_dataset/testset_split_1_labels.tsv \
+  --save-dir script/foriceberg/results/predictions_testset_run1 \
+  --output-dir script/foriceberg/results/evaluation_testset_run1 \
+  --dataset-name F_ICEBERG_dataset \
+  --gpu
+```
+
+Retrain outputs go under **`script/foriceberg/results/`** by default.

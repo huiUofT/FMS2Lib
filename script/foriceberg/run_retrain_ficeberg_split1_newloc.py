@@ -15,7 +15,7 @@ Optional env (defaults shown):
 - ``ICEBERG_STRICT_GITHUB=1``: require every dataset file (after ``Path.resolve()``) to lie under ``github/``; subprocess ``PYTHONPATH`` is **only** ``github/src`` (no inherited paths).
 
 For GitHub upload: ship this ``github/`` tree; place or symlink large HDF5/Tsv under
-``github/data/spec_datasets/F_ICEBERG_dataset/`` (see ``github/data/README.md``).
+``github/data/spec_datasets/F_ICEBERG_dataset/`` (see repo-root ``README.md``, Data layout).
 """
 from __future__ import annotations
 
@@ -35,11 +35,17 @@ def subprocess_python() -> str:
     return sys.executable
 
 
-def github_root() -> Path:
-    if os.environ.get("ICEBERG_GITHUB_ROOT"):
-        return Path(os.environ["ICEBERG_GITHUB_ROOT"]).expanduser().resolve()
-    # github/script/this_file.py -> parent = github/
-    return Path(__file__).resolve().parents[1]
+from foriceberg_paths import (  # noqa: E402
+    data_spec_datasets,
+    github_root,
+    pythonpath_src,
+    results_dir,
+    script_dir,
+)
+
+
+def _github_root() -> Path:
+    return github_root()
 
 
 def _resolved_under_tree(path: Path, root: Path) -> bool:
@@ -59,8 +65,8 @@ def _resolved_under_tree(path: Path, root: Path) -> bool:
 
 
 def main() -> None:
-    root = github_root()
-    add_script = root / "script" / "add_dag_intens.py"
+    root = _github_root()
+    add_script = script_dir() / "add_dag_intens.py"
     if not add_script.is_file():
         print(f"ERROR: missing {add_script}", file=sys.stderr)
         sys.exit(2)
@@ -69,11 +75,11 @@ def main() -> None:
     env = os.environ.copy()
     strict = os.environ.get("ICEBERG_STRICT_GITHUB", "").strip() in ("1", "true", "yes", "on")
     # Only ``github/src`` for ``ms_pred``; do not append inherited PYTHONPATH (avoids loading code from ICEBERG/src).
-    env["PYTHONPATH"] = str(root / "src")
+    env["PYTHONPATH"] = pythonpath_src()
     env.setdefault("HDF5_USE_FILE_LOCKING", "FALSE")
     env.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
 
-    dataset_root = root / "data/spec_datasets/F_ICEBERG_dataset"
+    dataset_root = data_spec_datasets("F_ICEBERG_dataset")
     spec_files = dataset_root / "spec_files.hdf5"
     labels_path = dataset_root / "labels.tsv"
     split_path = dataset_root / "splits/split_1.tsv"
@@ -84,8 +90,8 @@ def main() -> None:
         if not req.is_file():
             print(
                 f"ERROR: missing {req}\n"
-                f"Prepare F_ICEBERG_dataset under {root / 'data/spec_datasets'} "
-                f"(see github/data/README.md).",
+                f"Prepare F_ICEBERG_dataset under {data_spec_datasets()} "
+                f"(see README.md at the FMS2Lib repo root, ICEBERG section).",
                 file=sys.stderr,
             )
             sys.exit(1)
@@ -104,13 +110,14 @@ def main() -> None:
                 print(
                     f"ERROR: ICEBERG_STRICT_GITHUB=1 but {label} is not confined to github/ after resolve():\n"
                     f"  {req}\n"
-                    f"Copy or bind-mount data under {root / 'data/spec_datasets'} instead of symlinks to other trees.",
+                    f"Copy or bind-mount data under {data_spec_datasets()} instead of symlinks to other trees.",
                     file=sys.stderr,
                 )
                 sys.exit(1)
     run_name = "split_1_rnd1_retrain_legacy_merge"
-    gen_dir = root / "results/dag_F_ICEBERG_retrain" / run_name
-    inten_dir = root / "results/dag_inten_F_ICEBERG_retrain" / run_name
+    results_dir().mkdir(parents=True, exist_ok=True)
+    gen_dir = results_dir() / "dag_F_ICEBERG_retrain" / run_name
+    inten_dir = results_dir() / "dag_inten_F_ICEBERG_retrain" / run_name
     gen_preds_dir = gen_dir / "preds_train_100"
     gen_inten_h5 = gen_dir / "preds_train_100_inten.hdf5"
 

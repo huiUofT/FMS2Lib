@@ -1,28 +1,43 @@
-# Core libraries for scientific computing
-numpy>=1.24.0
-scipy>=1.10.0
+# FMS2Lib — combined dependencies
+#   • MSBuddy / formula_prediction (ranker, calibration, NL pipeline)
+#   • ICEBERG foriceberg (script/foriceberg, src/foriceberg/ms_pred, retrain)
+#
+# Install (typical):
+#   pip install -r requirements.txt
+#
+# ICEBERG GPU stack (torch / dgl / PyG): install CUDA-matched wheels first when needed:
+#   https://pytorch.org/get-started/locally/
+#   https://www.dgl.ai/pages/start.html
+#   https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html
+# On HPC, RDKit is often easier via: conda install -c conda-forge rdkit
+# Or use parent ICEBERG: source …/iceberg/activate_env.sh
 
-# Machine Learning libraries
+# --- Shared / scientific core ---
+numpy>=1.24.0
+pandas>=1.3.0
+scipy>=1.10.0
+tqdm>=4.65.0
+h5py>=3.0
+PyYAML>=6
+pyarrow>=10
+requests>=2.31.0
+
+# --- MSBuddy / formula_prediction ---
 lightgbm>=4.2.0
 joblib>=1.2.0
 scikit-learn>=1.3.0
-
-# For downloading data
 gdown>=4.7.0
-requests>=2.31.0
-
-# Data manipulation
-pandas>=1.2.0
-
-# Utilities
-tqdm>=4.65.0
-
-# Custom dependencies
 brain-isotopic-distribution>=1.5.14
 chemparse>=0.1.2
-
-# For JIT compilation
 numba>=0.57.0
-
-# MGF calibration (clean.py: LOWESS, scipy.interpolate)
 statsmodels>=0.14.0
+
+# --- ICEBERG foriceberg (ms_pred, MAGMA, retrain) ---
+multiprocess>=0.70
+einops>=0.4
+networkx>=2.6
+pytorch-lightning>=1.6,<2.0
+torch
+dgl
+torch-geometric
+rdkit>=2022.9.1

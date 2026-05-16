@@ -30,9 +30,11 @@ from rdkit import Chem, RDLogger
 
 RDLogger.DisableLog("rdApp.*")
 
-_SCRIPT_DIR = Path(__file__).resolve().parent
-_GITHUB_ROOT = _SCRIPT_DIR.parent
-_GITHUB_SRC = _GITHUB_ROOT / "src"
+from foriceberg_paths import github_root, mode_dir, pythonpath_src, repo_root, script_dir, src_dir
+
+_SCRIPT_DIR = script_dir()
+_GITHUB_ROOT = repo_root()
+_GITHUB_SRC = src_dir()
 
 if str(_GITHUB_SRC) not in sys.path:
     sys.path.insert(0, str(_GITHUB_SRC))
@@ -47,9 +49,9 @@ from build_pubchem_top100_by_ecfp4_from_mgf import (  # noqa: E402
 from ms_pred.retrieval import run_iceberg_retrieval_eval as base  # noqa: E402
 from ms_pred.retrieval.run_iceberg_retrieval_eval_evaltest import dist_bin  # noqa: E402
 
-_DEFAULT_GEN = _GITHUB_ROOT / "mode" / "generation" / "best.ckpt"
-_DEFAULT_INTEN = _GITHUB_ROOT / "mode" / "intensity" / "best.ckpt"
-_DEFAULT_PRED = _GITHUB_ROOT / "src" / "ms_pred" / "dag_pred" / "predict_smis_trained_inten.py"
+_DEFAULT_GEN = mode_dir() / "generation" / "best.ckpt"
+_DEFAULT_INTEN = mode_dir() / "intensity" / "best.ckpt"
+_DEFAULT_PRED = src_dir() / "ms_pred" / "dag_pred" / "predict_smis_trained_inten.py"
 
 
 def canon(s: str) -> str:
@@ -287,7 +289,7 @@ def run_predictor_local(args: argparse.Namespace, labels_tsv: Path, save_dir: Pa
     if args.gpu:
         cmd.insert(2, "--gpu")
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(_GITHUB_ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = pythonpath_src() + os.pathsep + env.get("PYTHONPATH", "")
     subprocess.run(cmd, cwd=str(_GITHUB_ROOT), env=env, check=True)
     out_h5 = save_dir / "preds.hdf5"
     if not out_h5.is_file():

@@ -1,15 +1,15 @@
-# `github/sh/` — portable shell entrypoints
+# `sh/foriceberg/` — shell entrypoints (FMS2Lib layout)
 
-Everything here assumes you run from the **`github/`** root (or use the wrappers below), so the tree can be **uploaded to GitHub.com** without referencing paths outside `github/`.
+Wrappers set **`cwd`** to the **FMS2Lib repo root** and **`PYTHONPATH`** to **`src/foriceberg`**. See **`../../README.md`** (ICEBERG section).
 
 ## `retrain_ficeberg_split1_newloc.sh`
 
-Runs **`../script/run_retrain_ficeberg_split1_newloc.py`** with:
+Runs **`script/foriceberg/run_retrain_ficeberg_split1_newloc.py`** with:
 
 - `cwd` = **`github/`**
 - `PYTHONPATH` = **`github/src`** (vendored `ms_pred`)
-- Data = **`github/data/spec_datasets/F_ICEBERG_dataset/`** (you must populate; see **`../data/README.md`**)
-- Checkpoints = **`github/results/dag_*_retrain/...`**
+- Data = **`data/foriceberg/spec_datasets/F_ICEBERG_dataset/`** (see **`../../README.md`** → ICEBERG section)
+- Checkpoints / outputs = **`script/foriceberg/results/dag_*_retrain/...`**
 
 **ICEBERG checkout:** activate the venv yourself (nothing outside ``github/`` is sourced by default):
 
@@ -48,7 +48,32 @@ bash sh/retrain_ficeberg_split1_newloc.sh
 
 The wrapper prefers, in order: **`ICEBERG_PYTHON`**, then **`$CONDA_PREFIX/bin/python`** if conda is activated, then **`$VIRTUAL_ENV/bin/python`** after `activate_env.sh`, then **`PYTHON`**, then **`python`** on `PATH`, then **`python3`**. On Compute Canada / similar systems, if you see `ModuleNotFoundError: pandas`, use `activate_env.sh`/conda or set e.g. `export ICEBERG_PYTHON=.../bin/python` before `bash sh/...`.
 
-Optional: `export ICEBERG_GITHUB_ROOT=/abs/path/to/github` if the script is moved.
+Optional: `export ICEBERG_GITHUB_ROOT=/abs/path/to/FMS2Lib` to override repo root detection.
+
+## `run_predict_testset_inten.sh`
+
+Calls **`src/foriceberg/ms_pred/dag_pred/predict_smis_trained_inten.py`**. Required env: `GEN_CHECKPOINT`, `INTEN_CHECKPOINT`, `TEST_LABELS`, `SAVE_DIR`.
+
+```bash
+cd /path/to/FMS2Lib
+export GEN_CHECKPOINT="mode/foriceberg/generation/best.ckpt"
+export INTEN_CHECKPOINT="mode/foriceberg/intensity/best.ckpt"
+export TEST_LABELS="data/foriceberg/spec_datasets/F_ICEBERG_dataset/testset_split_1_labels.tsv"
+export SAVE_DIR="script/foriceberg/results/predictions_testset_run1"
+bash sh/foriceberg/run_predict_testset_inten.sh
+```
+
+## `run_evaluate_testset_cosine.sh`
+
+Calls **`script/foriceberg/evaluate_test_set.py`** on **`${SAVE_DIR}/preds.hdf5`**. Required env: `SAVE_DIR`, `TEST_LABELS`, `OUTPUT_DIR`, `DATASET_NAME`.
+
+```bash
+export OUTPUT_DIR="script/foriceberg/results/evaluation_testset_run1"
+export DATASET_NAME="F_ICEBERG_dataset"
+bash sh/foriceberg/run_evaluate_testset_cosine.sh
+```
+
+Equivalent one-shot: **`python script/foriceberg/run.py predict-eval`**.
 
 ## `legacy_merge_eval_interactive_20260507_101600_args.yaml`
 

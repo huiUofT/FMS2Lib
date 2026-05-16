@@ -1,4 +1,5 @@
 """ utils """
+import os
 import sys
 import copy
 import logging
@@ -27,7 +28,9 @@ NIST_COLLISION_ENERGY_STD = 31.604227557486197
 
 
 def get_data_dir(dataset_name: str) -> Path:
-    return Path("data/spec_datasets") / dataset_name
+    """Dataset root under ``data/foriceberg/spec_datasets/`` in the FMS2Lib layout."""
+    base = os.environ.get("ICEBERG_SPEC_DATASETS_ROOT", "data/foriceberg/spec_datasets")
+    return Path(base) / dataset_name
 
 class HDF5Dataset:
     """
