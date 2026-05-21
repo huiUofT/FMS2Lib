@@ -1,0 +1,2 @@
+# GitHub rejects blobs >100MB
+data/foriceberg/**/spec_files.hdf5 filter=lfs diff=lfs merge=lfs -text
