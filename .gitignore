@@ -20,10 +20,11 @@ scratch/
 # Large MsBuddy DBs (auto-download on first import; see src/msbuddy/load.py)
 src/msbuddy/data/*.joblib
 
-# ICEBERG F_ICEBERG_dataset: only labels.tsv + spec_files.hdf5 are in git
+# ICEBERG F_ICEBERG_dataset: labels.tsv, spec_files.hdf5, testset_split_1_labels.tsv in git
 data/foriceberg/**/spec_files.hdf5.bak
 data/foriceberg/**/magma_outputs/
 data/foriceberg/**/subformulae/
 data/foriceberg/**/splits/
 data/foriceberg/**/testset_*.tsv
+!data/foriceberg/**/testset_split_1_labels.tsv
 data/foriceberg/**/trainset_*.csv

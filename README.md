@@ -128,8 +128,10 @@ FMS2Lib/
 
 ### Environment
 
+Set once per shell (use **your** clone path, not a fixed machine path):
+
 ```bash
-export FMS2LIB=/path/to/FMS2Lib
+export FMS2LIB=/path/to/FMS2Lib    # e.g. wherever you cloned this repo
 cd "${FMS2LIB}"
 export PYTHONPATH="${FMS2LIB}/src/foriceberg:${PYTHONPATH:-}"
 # Optional override:
@@ -140,11 +142,23 @@ export PYTHONPATH="${FMS2LIB}/src/foriceberg:${PYTHONPATH:-}"
 
 ### Data (`data/foriceberg/spec_datasets/F_ICEBERG_dataset/`)
 
-Needs: `labels.tsv`, `spec_files.hdf5`, `splits/split_1.tsv`, `magma_outputs/magma_tree.hdf5`, `subformulae/no_subform.hdf5` (symlink large data if needed):
+**In this GitHub repo** (`data/foriceberg/spec_datasets/F_ICEBERG_dataset/`):
+
+- `labels.tsv`
+- `spec_files.hdf5` (Git LFS — run `git lfs pull` after clone)
+- `testset_split_1_labels.tsv` (for **`predict-eval`** on split 1)
+
+**For full retrain**, you still need locally (not in git; see `.gitignore`):
+
+- `splits/split_1.tsv`
+- `magma_outputs/magma_tree.hdf5` (run `python script/foriceberg/run.py magma`, or copy from your cluster)
+- `subformulae/no_subform.hdf5`
+
+Example: symlink an existing dataset tree on a cluster:
 
 ```bash
 mkdir -p "${FMS2LIB}/data/foriceberg/spec_datasets"
-ln -sfn /path/to/iceberg/data/spec_datasets/F_ICEBERG_dataset \
+ln -sfn /path/to/your/F_ICEBERG_dataset \
   "${FMS2LIB}/data/foriceberg/spec_datasets/F_ICEBERG_dataset"
 ```
 
