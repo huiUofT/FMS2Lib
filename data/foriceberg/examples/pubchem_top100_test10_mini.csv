@@ -1,0 +1,4 @@
+identifier,true_formula,true_smiles,candidate_smiles,tanimoto,rank
+MS2Base_212874,C15H15F3N2O3,COc1ccc(C(NC(=O)NCc2ccco2)C(F)(F)F)cc1,COc1ccc(C(NC(=O)NCc2ccco2)C(F)(F)F)cc1,1.0,1
+MS2Base_170261,C14H19FN4O2S,CCn1nc(C(C)(C)C)cc1NS(=O)(=O)c1cncc(F)c1,CCn1nc(C(C)(C)C)cc1NS(=O)(=O)c1cncc(F)c1,1.0,1
+MS2Base_145191,C20H23ClFN3O2,CCN1CCO[C@@H](CNC(=O)Nc2c(F)cccc2Cl)[C@@H]1c1ccccc1,CCN1CCO[C@@H](CNC(=O)Nc2c(F)cccc2Cl)[C@@H]1c1ccccc1,1.0,1

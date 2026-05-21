@@ -1,0 +1,2 @@
+# One SMILES per line; # and empty lines ignored
+CC(=O)O
