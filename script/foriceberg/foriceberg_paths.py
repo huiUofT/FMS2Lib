@@ -1,4 +1,7 @@
-"""Path helpers when the ICEBERG tree lives under ``*/foriceberg/`` inside FMS2Lib."""
+"""Path helpers for ICEBERG assets under FMS2Lib ``*/foriceberg/`` folders.
+
+Set ``ICEBERG_GITHUB_ROOT`` to override auto-detected repo root (same as ``FMS2LIB``).
+"""
 from __future__ import annotations
 
 import os

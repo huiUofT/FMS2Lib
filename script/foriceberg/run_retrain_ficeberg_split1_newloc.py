@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
 """
-F_ICEBERG split_1 retrain (legacy_merge) — **portable under ``github/`` only**.
+F_ICEBERG split_1 retrain (legacy_merge).
 
-- Working directory: **this repository's ``github/`` root** (parent of ``script/``).
-- ``PYTHONPATH``: **only** ``github/src`` (vendored ``ms_pred``).
-- Dataset layout: ``github/data/spec_datasets/F_ICEBERG_dataset/`` (same as ICEBERG:
-  ``labels.tsv``, ``splits/split_1.tsv``, ``magma_outputs/``, ``subformulae/``, …).
-- Outputs: ``github/results/dag_F_ICEBERG_retrain/...`` and ``github/results/dag_inten_F_ICEBERG_retrain/...``.
+Run directly or via ``bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh``. See repo ``README.md``.
 
-Optional env (defaults shown):
+- Cwd: FMS2Lib repo root; ``PYTHONPATH``: ``src/foriceberg``.
+- Dataset: ``data/foriceberg/spec_datasets/F_ICEBERG_dataset/`` (labels, splits, magma, subformulae).
+- Outputs: ``script/foriceberg/results/dag_F_ICEBERG_retrain/`` and ``dag_inten_F_ICEBERG_retrain/``.
 
-- ``ICEBERG_GITHUB_ROOT``: override auto-detected ``github/`` root (absolute path).
-- ``ICEBERG_PYTHON``: Python executable for training subprocesses (set by ``sh/retrain_ficeberg_split1_newloc.sh`` when conda is active, or set manually on HPC).
-- ``ICEBERG_STRICT_GITHUB=1``: require every dataset file (after ``Path.resolve()``) to lie under ``github/``; subprocess ``PYTHONPATH`` is **only** ``github/src`` (no inherited paths).
-
-For GitHub upload: ship this ``github/`` tree; place or symlink large HDF5/Tsv under
-``github/data/spec_datasets/F_ICEBERG_dataset/`` (see repo-root ``README.md``, Data layout).
+Env: ``ICEBERG_GITHUB_ROOT`` (repo root), ``ICEBERG_PYTHON``, ``ICEBERG_STRICT_GITHUB=1``.
 """
 from __future__ import annotations
 
@@ -49,7 +42,7 @@ def _github_root() -> Path:
 
 
 def _resolved_under_tree(path: Path, root: Path) -> bool:
-    """True if path exists and resolve() stays under root (symlinks outside github/ fail strict mode)."""
+    """True if path exists and resolve() stays under repo root (strict mode)."""
     try:
         if not path.exists():
             return False
@@ -74,7 +67,7 @@ def main() -> None:
     os.chdir(root)
     env = os.environ.copy()
     strict = os.environ.get("ICEBERG_STRICT_GITHUB", "").strip() in ("1", "true", "yes", "on")
-    # Only ``github/src`` for ``ms_pred``; do not append inherited PYTHONPATH (avoids loading code from ICEBERG/src).
+    # Only src/foriceberg for ms_pred; do not append inherited PYTHONPATH.
     env["PYTHONPATH"] = pythonpath_src()
     env.setdefault("HDF5_USE_FILE_LOCKING", "FALSE")
     env.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
@@ -108,7 +101,7 @@ def main() -> None:
         for label, req in to_check:
             if not _resolved_under_tree(req, root):
                 print(
-                    f"ERROR: ICEBERG_STRICT_GITHUB=1 but {label} is not confined to github/ after resolve():\n"
+                    f"ERROR: ICEBERG_STRICT_GITHUB=1 but {label} is not confined to repo root after resolve():\n"
                     f"  {req}\n"
                     f"Copy or bind-mount data under {data_spec_datasets()} instead of symlinks to other trees.",
                     file=sys.stderr,
@@ -137,7 +130,7 @@ def main() -> None:
     print(f"[retrain] python={py}")
     print(f"[retrain] PYTHONPATH={env['PYTHONPATH']}")
     if strict:
-        print("[retrain] ICEBERG_STRICT_GITHUB=1 (data + imports confined to github/)", flush=True)
+        print("[retrain] ICEBERG_STRICT_GITHUB=1 (data + imports confined to repo root)", flush=True)
 
     run(
         [

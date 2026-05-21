@@ -1,7 +1,12 @@
-""" Add dag intensities
+"""Copy fragment intensities from gold DAGs into predicted DAG HDF5 files.
 
-Given a set of predicted dags, add intensities to them from the gold standard
+Example::
 
+    python script/foriceberg/add_dag_intens.py \\
+      --pred-dag-folder /path/to/pred_dags.hdf5 \\
+      --true-dag-folder /path/to/true_dags.hdf5 \\
+      --out-dag-folder /path/to/out_dags.hdf5 \\
+      --num-workers 4
 """
 import json
 import argparse

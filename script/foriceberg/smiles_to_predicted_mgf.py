@@ -17,7 +17,7 @@ from rdkit import Chem, RDLogger
 
 RDLogger.DisableLog("rdApp.*")
 
-# `github/` root (this file lives under `github/script/`)
+# FMS2Lib repo root via foriceberg_paths
 from foriceberg_paths import github_root, mode_dir, pythonpath_src, repo_root
 
 REPO_ROOT = repo_root()

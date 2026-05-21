@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""CLI entry: implementation in ms_pred.retrieval (github/src)."""
+"""CLI entry for retrieval eval; implementation in ``src/foriceberg/ms_pred/retrieval/``.
+
+See repo ``README.md``.
+"""
 from __future__ import annotations
 
 import sys

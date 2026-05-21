@@ -6,12 +6,12 @@ for scoring). True SMILES in the MGF is never used to build or rank candidates.
 Pipeline:
   1) Read per-spectrum predicted formula from CSV (e.g. MS1/MS2 ranker output).
   2) Collect SMILES candidates by that formula from SusDat CSV and/or PubChem-by-formula HDF5.
-  3) Run ICEBERG (gen + inten checkpoints under github/mode by default) on all candidates.
+  3) Run ICEBERG (gen + inten checkpoints under mode/foriceberg by default) on all candidates.
   4) Score each candidate vs the experimental spectrum using the same binned cosine as
      ms_pred.retrieval.run_iceberg_retrieval_eval_evaltest.dist_bin at 30 eV.
   5) Write result CSV with formula, SMILES, candidate source, similarity, etc.
 
-Uses ms_pred.retrieval (github/src) for MGF IO, label building, predictor wiring, and dist_bin.
+Uses ms_pred.retrieval (src/foriceberg) for MGF IO, label building, predictor wiring, and dist_bin.
 """
 from __future__ import annotations
 

@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""One-pass: MGF + SusDat CSV -> candidates -> predict -> cosine Top-1 eval.
+
+See repo ``README.md``.
+"""
 import argparse
 import json
 import subprocess
@@ -47,7 +51,7 @@ def parse_args() -> argparse.Namespace:
 		"--predict-script",
 		type=Path,
 		default=src_dir() / "ms_pred" / "dag_pred" / "predict_eval_end2end_pubchem_candidates_cosine.py",
-		help="End2end prediction + cosine driver (under github/src/ms_pred/dag_pred/)",
+		help="End2end driver under src/foriceberg/ms_pred/dag_pred/",
 	)
 	parser.add_argument("--batch-size", type=int, default=32)
 	parser.add_argument("--num-workers", type=int, default=0)

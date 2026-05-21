@@ -1,199 +1,113 @@
 # FMS2Lib
 
-MS2 prediction for fluorinated compounds (formula / ranker workflows in this export).
+MS/MS workflows for fluorinated compounds: **formula ranker** (`script/formula_prediction/`, MSBuddy) and **ICEBERG DAG prediction** (`script/foriceberg/`, `src/foriceberg/ms_pred`).
 
-
-## Layout
-
-| Path | Contents |
-|------|----------|
-| `src/msbuddy/` | MSBuddy (third-party package only) |
-| `script/formula_prediction/calibration/` | MGF calibration (`clean.py`, `subformula.py`, …) |
-| `script/formula_prediction/netural_loss/` | NL pipeline (sibling scripts; subprocess paths) |
-| `script/formula_prediction/train/` | Feature build + LightGBM ranker training |
-| `script/formula_prediction/eval/` | Eval joblib generation + inference |
-| `data/testdataset/` | Small bundled MGFs, `test10_formulas.txt`, **`test10_nl_meta.csv`** (FEATURE_ID + SMILES + FORMULA for NL step 3) |
-
-## Paths
-
-- **`GITHUB_ROOT`**: absolute path to **this** `github` directory (export root).
-- **`--msbuddy-dir`**: directory that **contains** the `msbuddy/` package → **`"${GITHUB_ROOT}/src"`**.
-- **`PYTHONPATH`**: optional if scripts already discover `src/msbuddy` by walking parents; otherwise **`"${GITHUB_ROOT}/src"`**.
-- **Self-contained runs (no paths outside `GITHUB_ROOT`)**: pass **`--repo-root "${GITHUB_ROOT}"`** to `mgf_to_results.py`, and use **absolute paths** for every file argument (`--mgf`, `--formulas`, `--output`, `--output-dir`, `--model`, …) under **`${GITHUB_ROOT}/...`**. Put scratch outputs under e.g. **`${GITHUB_ROOT}/scratch/...`**.
-- **Still outside this folder (unavoidable)**: the Python interpreter, installed packages in your environment, and any **on-demand downloads** triggered by `msbuddy` (caches not stored in `github/` unless you configure them).
-
-## Example commands (bash), self-contained
-
-Set once per shell (replace `/path/to/f-paper/github` with your real absolute path):
+## Setup
 
 ```bash
-export GITHUB_ROOT=/path/to/f-paper/github
-cd "$GITHUB_ROOT"
-export PYTHONPATH="${GITHUB_ROOT}/src"
-export PYTHONIOENCODING=utf-8
-mkdir -p "${GITHUB_ROOT}/scratch"
-```
+git clone https://github.com/huiUofT/FMS2Lib.git
+cd FMS2Lib
+git lfs pull    # spec_files.hdf5
 
-**MGF calibration** (`clean.py`): MS1/MS2 tolerances are in ppm. `--ms2-tol` (default 5) drives MS2 preprocessing and `assign_subformula`; `--ms1-tol` (default 2) is recorded for consistency.
-
-```bash
-python "${GITHUB_ROOT}/script/formula_prediction/calibration/clean.py" \
-  --mgf "${GITHUB_ROOT}/data/testdataset/F_ICEBERG_calibrated_test10.mgf" \
-  --formulas "${GITHUB_ROOT}/data/testdataset/test10_formulas.txt" \
-  --output "${GITHUB_ROOT}/scratch/calibrated_out.mgf" \
-  --ms1-tol 2 \
-  --ms2-tol 5 \
-  --msbuddy-dir "${GITHUB_ROOT}/src"
-```
-
-**Neutral-loss pipeline** (`nl_analysis_pipeline.py`): forwards `--ms1-tol` / `--ms2-tol` to `subformula.py` (same defaults as above).
-
-Step 3 (NL frequency by compound) needs a metadata CSV with **`FEATURE_ID`** and the compound column (**`SMILES`** by default, or set `--compound-key`). If `--formulas` is a **`.txt`**, either:
-
-- pass **`--meta-csv`** (example bundle: `data/testdataset/test10_nl_meta.csv` — aligned with `F_ICEBERG_calibrated_test10.mgf`), or  
-- rely on **auto meta from MGF**: when each `BEGIN IONS` block includes `FEATURE_ID=` and `SMILES=` lines, the pipeline writes `{mgf_stem}_nl_meta_from_mgf.csv` under `--output-dir`.
-
-```bash
-python "${GITHUB_ROOT}/script/formula_prediction/netural_loss/nl_analysis_pipeline.py" \
-  --mgf "${GITHUB_ROOT}/data/testdataset/F_ICEBERG_calibrated_test10.mgf" \
-  --formulas "${GITHUB_ROOT}/data/testdataset/test10_formulas.txt" \
-  --meta-csv "${GITHUB_ROOT}/data/testdataset/test10_nl_meta.csv" \
-  --output-dir "${GITHUB_ROOT}/scratch/nl_out" \
-  --ms1-tol 2 \
-  --ms2-tol 5 \
-  --msbuddy-dir "${GITHUB_ROOT}/src"
-```
-
-**Train (features + ranker)** (`mgf_to_results.py`): supervised only — **`--formulas`** must be a **`.txt`** with one precursor formula per line, **same order as spectra in the MGF**. No compound metadata CSV is used here (that CSV is only for the NL pipeline step 3).
-
-```bash
-python "${GITHUB_ROOT}/script/formula_prediction/train/mgf_to_results.py" \
-  --mgf "${GITHUB_ROOT}/data/testdataset/F_ICEBERG_calibrated_test10.mgf" \
-  --formulas "${GITHUB_ROOT}/data/testdataset/test10_formulas.txt" \
-  --output-dir "${GITHUB_ROOT}/scratch/train_out" \
-  --repo-root "${GITHUB_ROOT}"
-```
-
-**Eval (generate + score)** (`run_eval_generate_and_predict.py`; adjust `--model` to a joblib under `${GITHUB_ROOT}`):
-
-```bash
-python "${GITHUB_ROOT}/script/formula_prediction/eval/run_eval_generate_and_predict.py" \
-  --mgf "${GITHUB_ROOT}/data/testdataset/F_ICEBERG_calibrated_test10.mgf" --mgf-only \
-  --output-dir "${GITHUB_ROOT}/scratch/eval_out" \
-  --model "${GITHUB_ROOT}/scratch/train_out/trained_models/model_ms1_ms2_ranker.joblib" \
-  --no-mmap
-```
-
-PowerShell (environment only):
-
-```powershell
-$env:GITHUB_ROOT = "D:\path\to\f-paper\github"
-$env:PYTHONPATH = "$env:GITHUB_ROOT\src"
-$env:PYTHONIOENCODING = "utf-8"
-```
-
-For all flags, run `python <script.py> --help`.
-
-## Dependencies
-
-One file covers **MSBuddy / formula_prediction** and **ICEBERG foriceberg** (see comments in the file). For ICEBERG, install CUDA-matched **torch / dgl / PyG** first when you need GPU training.
-
-```bash
 pip install -r requirements.txt
-pip install -e .   # registers ``msbuddy`` from ``src/`` (editable)
+pip install -e .   # msbuddy from src/
 ```
 
-**MsBuddy data (`src/msbuddy/data/*.joblib`):** these files are **not** stored in the repo (GitHub file-size limit). On first use, `msbuddy` downloads `common_db_v0.2.4.joblib` and `formula_db_v0.2.4.joblib` from the upstream release URLs in `src/msbuddy/load.py` (~416 MB for the formula DB). Ensure network access for the first run.
+**ICEBERG** (each new shell):
 
-Longer docs (Chinese/English) and per-folder READMEs remain under `f-paper/py文件/` in the main repository.
+```bash
+export FMS2LIB=/path/to/FMS2Lib
+cd "${FMS2LIB}"
+export PYTHONPATH="${FMS2LIB}/src/foriceberg:${PYTHONPATH:-}"
+```
+
+**Formula ranker** (add MSBuddy to path):
+
+```bash
+export PYTHONPATH="${FMS2LIB}/src:${PYTHONPATH:-}"
+```
+
+GPU training needs CUDA-matched `torch` / `dgl` / PyG (see `requirements.txt`). MsBuddy `.joblib` DBs download on first use (~416 MB).
+
+**Bundled data** (`data/foriceberg/spec_datasets/F_ICEBERG_dataset/`): `labels.tsv`, `spec_files.hdf5`, `testset_split_1_labels.tsv`. For retrain, add locally: `splits/split_1.tsv`, `magma_outputs/magma_tree.hdf5`, `subformulae/no_subform.hdf5` (generate with scripts below or symlink a full dataset tree).
+
+Default checkpoints: `mode/foriceberg/generation/best.ckpt`, `mode/foriceberg/intensity/best.ckpt`.
 
 ---
 
-## ICEBERG / `foriceberg` (MS/MS prediction & retrain)
+## ICEBERG (`script/foriceberg/`)
 
-Portable ICEBERG workflows live under **`*/foriceberg/`** subfolders (not a separate top-level tree). Code: **`src/foriceberg/ms_pred`**. Scripts: **`script/foriceberg/`**. Data: **`data/foriceberg/spec_datasets/`**. Checkpoints: **`mode/foriceberg/`**. Shell: **`sh/foriceberg/`**.
+Run from **`${FMS2LIB}`**. Flags: `python script/foriceberg/<script>.py --help`.
 
-### Layout
+| Script | Purpose |
+|--------|---------|
+| `process_new_dataset_from_mgf_with_parentmass.py` | MGF → `labels.tsv`, `spec_files.hdf5`, `splits/split_<seed>.tsv` |
+| `run_magma.py` | `spec_files.hdf5` + `labels.tsv` → `magma_outputs/magma_tree.hdf5` |
+| `run_retrain_ficeberg_split1_newloc.py` | F_ICEBERG split_1 retrain (gen + inten) |
+| `run_predict_and_evaluate_testset.py` | Test labels → `preds.hdf5` → cosine evaluation |
+| `evaluate_test_set.py` | Cosine eval only (given `preds.hdf5`) |
+| `smiles_to_predicted_mgf.py` | SMILES → predicted MS/MS MGF |
+| `run_end2end_from_mgf_susdat_onepass.py` | MGF + SusDat CSV → predict → Top-1 eval |
+| `run_iceberg_retrieval_eval_evaltest.py` | Candidate CSV + MGF → retrieval eval |
+| `blind_retrieval_from_pred_formula.py` | Predicted formula + MGF → blind retrieval |
+| `build_pubchem_top100_by_ecfp4_from_mgf.py` | MGF + PubChem HDF5 → top-K CSV |
+| `add_dag_intens.py` | Copy intensities from gold DAGs into predicted DAG HDF5 |
 
-```text
-FMS2Lib/
-  script/foriceberg/     # run.py, drivers, results/ (created at train time)
-  src/foriceberg/ms_pred/
-  data/foriceberg/spec_datasets/<dataset>/
-  mode/foriceberg/generation|intensity/best.ckpt
-  sh/foriceberg/retrain_ficeberg_split1_newloc.sh
-  sh/foriceberg/run_predict_testset_inten.sh
-  sh/foriceberg/run_evaluate_testset_cosine.sh
-```
+**Shell** (`sh/foriceberg/`): `retrain_ficeberg_split1_newloc.sh`, `run_predict_testset_inten.sh`, `run_evaluate_testset_cosine.sh`.
 
-### Environment
+### Examples
 
-Set once per shell (use **your** clone path, not a fixed machine path):
-
-```bash
-export FMS2LIB=/path/to/FMS2Lib    # e.g. wherever you cloned this repo
-cd "${FMS2LIB}"
-export PYTHONPATH="${FMS2LIB}/src/foriceberg:${PYTHONPATH:-}"
-# Optional override:
-# export ICEBERG_GITHUB_ROOT="${FMS2LIB}"
-```
-
-**Dependencies:** same root **`requirements.txt`** (ICEBERG section) or parent ICEBERG `activate_env.sh`.
-
-### Data (`data/foriceberg/spec_datasets/F_ICEBERG_dataset/`)
-
-**In this GitHub repo** (`data/foriceberg/spec_datasets/F_ICEBERG_dataset/`):
-
-- `labels.tsv`
-- `spec_files.hdf5` (Git LFS — run `git lfs pull` after clone)
-- `testset_split_1_labels.tsv` (for **`predict-eval`** on split 1)
-
-**For full retrain**, you still need locally (not in git; see `.gitignore`):
-
-- `splits/split_1.tsv`
-- `magma_outputs/magma_tree.hdf5` (run `python script/foriceberg/run.py magma`, or copy from your cluster)
-- `subformulae/no_subform.hdf5`
-
-Example: symlink an existing dataset tree on a cluster:
+**Predict + evaluate** (split 1 test set):
 
 ```bash
-mkdir -p "${FMS2LIB}/data/foriceberg/spec_datasets"
-ln -sfn /path/to/your/F_ICEBERG_dataset \
-  "${FMS2LIB}/data/foriceberg/spec_datasets/F_ICEBERG_dataset"
-```
-
-### Unified CLI
-
-```bash
-cd "${FMS2LIB}"
-python script/foriceberg/run.py                  # list commands
-python script/foriceberg/run.py <cmd> --help
-```
-
-| Command | Purpose |
-|---------|---------|
-| `process-dataset` | MGF → `data/foriceberg/spec_datasets/<name>/` |
-| `magma` | → `magma_outputs/magma_tree.hdf5` |
-| `retrain` | F_ICEBERG split_1 retrain (or `bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh`) |
-| `predict-eval` | test labels → preds + cosine eval (or two-step: `sh/foriceberg/run_predict_testset_inten.sh` + `run_evaluate_testset_cosine.sh`) |
-| `smiles2mgf` / `end2end` / `retrieval-eval` / `blind-retrieval` / `pubchem-top100` | see `python script/foriceberg/run.py` |
-
-### Typical pipeline
-
-1. `python script/foriceberg/run.py process-dataset --mgf-file ... --dataset-name ...`
-2. `python script/foriceberg/run.py magma --spectra-dir data/foriceberg/spec_datasets/.../spec_files.hdf5 ...`
-3. `bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh`
-4. `python script/foriceberg/run.py predict-eval --dataset-labels data/foriceberg/spec_datasets/.../testset_split_1_labels.tsv ...`
-
-Example **predict-eval** (paths relative to **`FMS2LIB`** root):
-
-```bash
-python script/foriceberg/run.py predict-eval \
+python script/foriceberg/run_predict_and_evaluate_testset.py \
   --dataset-labels data/foriceberg/spec_datasets/F_ICEBERG_dataset/testset_split_1_labels.tsv \
-  --save-dir script/foriceberg/results/predictions_testset_run1 \
-  --output-dir script/foriceberg/results/evaluation_testset_run1 \
+  --save-dir script/foriceberg/results/predictions_run1 \
+  --output-dir script/foriceberg/results/evaluation_run1 \
   --dataset-name F_ICEBERG_dataset \
   --gpu
 ```
 
-Retrain outputs go under **`script/foriceberg/results/`** by default.
+**Retrain** (needs full dataset artifacts):
+
+```bash
+bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh
+# or: python script/foriceberg/run_retrain_ficeberg_split1_newloc.py
+```
+
+**New dataset from MGF**:
+
+```bash
+python script/foriceberg/process_new_dataset_from_mgf_with_parentmass.py \
+  --mgf-file /path/to/input.mgf \
+  --dataset-name my_dataset
+```
+
+**MAGMA trees** (after `spec_files.hdf5` exists):
+
+```bash
+python script/foriceberg/run_magma.py --help
+```
+
+**Eval only** (if `preds.hdf5` already exists):
+
+```bash
+python script/foriceberg/evaluate_test_set.py \
+  --pred-file script/foriceberg/results/predictions_run1/preds.hdf5 \
+  --test-labels data/foriceberg/spec_datasets/F_ICEBERG_dataset/testset_split_1_labels.tsv \
+  --dataset-name F_ICEBERG_dataset \
+  --output-dir script/foriceberg/results/evaluation_run1
+```
+
+---
+
+## Formula ranker (`script/formula_prediction/`)
+
+```bash
+export PYTHONPATH="${FMS2LIB}/src:${PYTHONPATH:-}"
+python script/formula_prediction/calibration/clean.py --help
+python script/formula_prediction/train/mgf_to_results.py --help
+python script/formula_prediction/eval/run_eval_generate_and_predict.py --help
+```
+
+Test MGFs: `data/testdataset/`. Use `--repo-root "${FMS2LIB}"` and paths under `${FMS2LIB}/...` for self-contained runs.

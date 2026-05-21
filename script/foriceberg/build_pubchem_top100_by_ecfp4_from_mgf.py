@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""Rank PubChem structures by ECFP4 similarity to MGF precursors (top-K CSV).
+
+See repo ``README.md``.
+"""
 import argparse, json, re
 from pathlib import Path
 from typing import Dict, List, Tuple

@@ -73,7 +73,7 @@ export DATASET_NAME="F_ICEBERG_dataset"
 bash sh/foriceberg/run_evaluate_testset_cosine.sh
 ```
 
-Equivalent one-shot: **`python script/foriceberg/run.py predict-eval`**.
+Equivalent one-shot: **`python script/foriceberg/run_predict_and_evaluate_testset.py`** (see root ``README.md``).
 
 ## `legacy_merge_eval_interactive_20260507_101600_args.yaml`
 

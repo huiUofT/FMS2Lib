@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+"""Build ICEBERG spec_datasets from MGF (labels.tsv, spec_files.hdf5, split TSV).
+
+See repo ``README.md``.
+"""
 import argparse
 import os
 import re

@@ -1,29 +1,10 @@
 #!/usr/bin/env python3
 """
-Run ``predict_smis_trained_inten.py`` then ``evaluate_test_set.py`` in one process.
+Predict test labels then evaluate cosine similarity.
 
-- Working directory: ``github/`` root (parent of ``script/``).
-- ``PYTHONPATH``: **``github/src`` first** (vendored ``ms_pred``), then inherited entries (e.g.
-  ``module load rdkit``) so **RDKit** stays importable; ``ms_pred`` still comes from this tree.
-
-Dataset paths, checkpoints, and HDF5 may **resolve outside** ``github/`` (e.g. symlinks to a
-parent ``iceberg/data/`` checkout).
-
-Default checkpoints (if present under the ``github/`` root)::
-
-    mode/generation/best.ckpt
-    mode/intensity/best.ckpt
-
-Example with explicit ``results/...`` retrain outputs, or omit ``--gen/--inten`` when the ``mode/`` files exist::
-
-    cd /path/to/foriceberg   # contains script/, src/, mode/
-
-    python3 script/run_predict_and_evaluate_testset.py \\
-      --dataset-labels data/spec_datasets/F_ICEBERG_dataset/testset_split_1_labels.tsv \\
-      --save-dir results/predictions_testset_run1 \\
-      --output-dir results/evaluation_testset_run1 \\
-      --dataset-name F_ICEBERG_dataset \\
-      --gpu
+Runs ``src/foriceberg/ms_pred/dag_pred/predict_smis_trained_inten.py`` then
+``evaluate_test_set.py``. Default checkpoints: ``mode/foriceberg/generation/best.ckpt``,
+``mode/foriceberg/intensity/best.ckpt``. See repo ``README.md``.
 """
 from __future__ import annotations
 
