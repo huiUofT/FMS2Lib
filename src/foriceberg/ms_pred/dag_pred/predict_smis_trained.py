@@ -37,7 +37,7 @@ def get_args():
     parser.add_argument("--gpu", default=False, action="store_true")
     parser.add_argument("--seed", default=42, action="store", type=int)
     parser.add_argument("--sparse-out", default=False, action="store_true")
-    parser.add_argument("--sparse-k", default=100, action="store", type=lambda x: None if x.lower() == 'none' else int(x), help="如果指定，只保留top K个峰；如果为None，保留所有强度>threshold的峰。默认100")
+    parser.add_argument("--sparse-k", default=100, action="store", type=lambda x: None if x.lower() == 'none' else int(x), help="Keep only the top K peaks when set; if None, keep all peaks with intensity > threshold. Default: 100")
     parser.add_argument("--binned-out", default=False, action="store_true")
     parser.add_argument('--adduct-shift',default=False, action="store_true")
     parser.add_argument("--num-workers", default=0, action="store", type=int)
@@ -57,7 +57,7 @@ def get_args():
     parser.add_argument("--dataset-name", default=None)
     parser.add_argument("--dataset-labels", default="labels.tsv")
     parser.add_argument("--split-name", default="split_22.tsv")
-    parser.add_argument("--threshold", default=0.01, action="store", type=float, help="强度阈值，过滤强度低于此值的峰。默认0.01")
+    parser.add_argument("--threshold", default=0.01, action="store", type=float, help="Intensity threshold for filtering low-intensity peaks. Default: 0.01")
     parser.add_argument("--max-nodes", default=100, action="store", type=int)
     parser.add_argument("--upper-limit", default=1500, action="store", type=int)
     parser.add_argument("--num-bins", default=15000, action="store", type=int)
@@ -74,14 +74,12 @@ def get_args():
 def predict():
     args = get_args()
     kwargs = args.__dict__
-    # 处理 sparse_k 为 None 的情况（从命令行传入的字符串 "None"）
     if isinstance(kwargs.get("sparse_k"), str) and kwargs.get("sparse_k").lower() == "none":
         kwargs["sparse_k"] = None
 
     save_dir = Path(kwargs["save_dir"])
     debug = kwargs["debug"]
     common.setup_logger(save_dir, log_name="joint_pred.log", debug=debug)
-    # 设置随机种子
     seed = kwargs.get("seed")
     if seed is not None:
         try:
@@ -142,14 +140,13 @@ def predict():
     # Load checkpoints with strict=False to handle structure mismatches
     import torch as torch_module  # Ensure torch is available
     
-    # 检查CUDA是否可用，如果不可用则强制使用CPU
     if gpu and not torch_module.cuda.is_available():
-        logging.warning("CUDA不可用，强制使用CPU模式")
+        logging.warning("CUDA is not available; forcing CPU mode")
         gpu = False
     
     map_location = "cuda" if (gpu and torch_module.cuda.is_available()) else "cpu"
     
-    # 加载checkpoint以获取hyper_parameters并验证（始终使用CPU加载以避免设备问题）
+    # Always inspect checkpoint metadata on CPU to avoid device issues.
     checkpoint = torch_module.load(gen_checkpoint, map_location="cpu")
     hparams = checkpoint.get('hyper_parameters', {})
     
@@ -161,22 +158,18 @@ def predict():
                  f"embed_elem_group={hparams.get('embed_elem_group', 'N/A')}")
     logging.info(f"Using device: {map_location}")
     
-    # 加载强度模型（使用官方预训练模型）
     inten_model_obj = inten_model.IntenGNN.load_from_checkpoint(
         inten_checkpoint, 
         map_location=map_location,
         strict=False
     )
     
-    # 加载生成模型，PyTorch Lightning会自动从checkpoint中读取hyper_parameters
-    # 但我们需要确保模型正确初始化
     try:
         gen_model_obj = gen_model.FragGNN.load_from_checkpoint(
             gen_checkpoint,
             map_location=map_location, 
             strict=False
         )
-        # 验证模型参数是否正确加载
         logging.info(f"Loaded model attributes: pe_embed_k={gen_model_obj.pe_embed_k}, "
                      f"add_hs={gen_model_obj.add_hs}, "
                      f"embed_elem_group={gen_model_obj.embed_elem_group}")
@@ -191,43 +184,29 @@ def predict():
         f"Loaded gen / inten models from {gen_checkpoint} & {inten_checkpoint}"
     )
 
-    # 修复pe_embed_k=0时的维度问题
-    # 当pe_embed_k=0时，random_walk_pe(k=0)仍然会返回1维embedding
-    # 但模型的root_module期望的维度不包含这1维
-    # 我们需要临时修改tree_processor的pe_embed_k来避免add_pe_embed被调用
-    # 但由于predict_mol中硬编码了add_pe_embed调用，我们需要另一种方法
-    # 实际上，问题在于gen_model.predict_mol中总是调用add_pe_embed，即使pe_embed_k=0
-    # 我们需要创建一个monkey patch来修复这个问题
+    # Avoid the extra positional-encoding column produced by random_walk_pe(k=0).
     
-    # 保存原始的add_pe_embed方法
     original_add_pe_embed = gen_model_obj.tree_processor.add_pe_embed
     
-    # 创建一个包装函数，当pe_embed_k=0时不添加PE embedding
     def patched_add_pe_embed(graph):
         if gen_model_obj.tree_processor.pe_embed_k > 0:
             return original_add_pe_embed(graph)
         else:
-            # pe_embed_k=0时，不添加PE embedding，直接返回graph
             return graph
     
-    # 应用monkey patch
     gen_model_obj.tree_processor.add_pe_embed = patched_add_pe_embed
-    logging.info("已应用monkey patch修复pe_embed_k=0时的维度问题")
+    logging.info("Applied pe_embed_k=0 compatibility patch")
     
     model = joint_model.JointModel(
         gen_model_obj=gen_model_obj, inten_model_obj=inten_model_obj
     )
     
-    # 修复inten_model的embed_instrument问题
-    # 如果model.embed_instrument=False但inten_model_obj.embed_instrument=True
-    # 需要在调用predict时处理instruments=None的情况
+    # Some intensity checkpoints expect an instrument embedding even when the joint model does not.
     if not model.embed_instrument and inten_model_obj.embed_instrument:
         original_inten_predict = inten_model_obj.predict
         
         def patched_inten_predict(*args, instruments=None, **kwargs):
-            # 如果instruments为None但embed_instrument=True，使用默认值
             if instruments is None and inten_model_obj.embed_instrument:
-                # 从adducts推断batch_size
                 adducts = kwargs.get('adducts', None)
                 if adducts is None and len(args) > 7:
                     adducts = args[7]
@@ -236,13 +215,12 @@ def predict():
                     import ms_pred.common as common
                     batch_size = len(adducts) if isinstance(adducts, (list, tuple)) else adducts.shape[0]
                     device = adducts.device if hasattr(adducts, 'device') else 'cpu'
-                    # 使用第一个instrument类型作为默认值
                     default_instrument = torch.zeros(batch_size, dtype=torch.long, device=device)
                     kwargs['instruments'] = default_instrument
             return original_inten_predict(*args, **kwargs)
         
         inten_model_obj.predict = patched_inten_predict
-        logging.info("已应用monkey patch修复inten_model的embed_instrument问题")
+        logging.info("Applied intensity-model instrument compatibility patch")
 
     with torch.no_grad():
         model.eval()
@@ -324,22 +302,18 @@ def predict():
                 for output_spec, spec_name, smi, h5_name in \
                         zip(full_outputs["spec"], spec_names, smis, h5_names):
                     if kwargs["sparse_out"]:
-                        # 使用阈值过滤：保留强度大于threshold的峰
                         threshold = kwargs.get("threshold", 0.01)
                         valid_inds = np.where(output_spec > threshold)[0]
                         if len(valid_inds) > 0:
-                            # 按强度排序
                             valid_intens = output_spec[valid_inds]
                             sorted_order = np.argsort(valid_intens)[::-1]
                             best_inds = valid_inds[sorted_order]
-                            # 如果指定了sparse_k，则限制数量
                             sparse_k = kwargs.get("sparse_k", 100)
                             if sparse_k is not None and sparse_k > 0:
                                 best_inds = best_inds[:sparse_k]
                             best_intens = output_spec[best_inds]
                             output_spec = np.stack([best_inds, best_intens], -1)
                         else:
-                            # 如果没有有效峰，创建空数组
                             output_spec = np.zeros((0, 2), dtype=output_spec.dtype)
 
                     inchikey = common.inchikey_from_smiles(smi)
@@ -349,34 +323,27 @@ def predict():
                         zip(full_outputs["spec"], spec_names, smis, h5_names, full_outputs["frag"]):
                     assert kwargs["sparse_out"], 'sparse_out must be True for non-binned output'
                     
-                    # 使用阈值过滤：保留强度大于threshold的峰
                     threshold = kwargs.get("threshold", 0.01)
                     if len(output_spec) > 0 and output_spec.shape[1] >= 2:
                         intensities = output_spec[:, 1]
                         valid_inds = np.where(intensities > threshold)[0]
                         
                         if len(valid_inds) > 0:
-                            # 按强度排序
                             valid_intens = intensities[valid_inds]
                             sorted_order = np.argsort(valid_intens)[::-1]
                             best_inds = valid_inds[sorted_order]
                             
-                            # 如果指定了sparse_k，则限制数量
                             sparse_k = kwargs.get("sparse_k", 100)
                             if sparse_k is not None and sparse_k > 0:
                                 best_inds = best_inds[:sparse_k]
                             
                             output_spec = output_spec[best_inds, :]
                             
-                            # 处理碎片数据：确保索引不越界
                             pred_frag_array = np.array(pred_frag) if pred_frag is not None else None
                             if pred_frag_array is not None and len(pred_frag_array) > 0:
-                                # 只使用在pred_frag范围内的索引
                                 valid_frag_inds = best_inds[best_inds < len(pred_frag_array)]
                                 if len(valid_frag_inds) > 0:
-                                    # 获取对应的碎片
                                     frag_selected = pred_frag_array[valid_frag_inds]
-                                    # 对于超出范围的索引，用None填充
                                     if len(valid_frag_inds) < len(best_inds):
                                         frag_padded = [None] * len(best_inds)
                                         for i, orig_idx in enumerate(best_inds):
@@ -388,17 +355,13 @@ def predict():
                                     else:
                                         pred_frag = frag_selected.tolist()
                                 else:
-                                    # 所有索引都超出范围，用None填充
                                     pred_frag = [None] * len(best_inds)
                             else:
-                                # 没有碎片数据，用None填充
                                 pred_frag = [None] * len(best_inds)
                         else:
-                            # 没有有效峰
                             output_spec = np.zeros((0, 2), dtype=output_spec.dtype)
                             pred_frag = []
                     else:
-                        # 空谱图
                         output_spec = np.zeros((0, 2), dtype=np.float32)
                         pred_frag = []
                     
@@ -423,10 +386,8 @@ def predict():
                     try:
                         h5.write_data(h5_name + '/spec', output_spec)
                         if pred_frag is not None and len(pred_frag) > 0:
-                            # 过滤掉None值，只保存有效的碎片
                             valid_frags = [f for f in pred_frag if f is not None]
                             if len(valid_frags) > 0:
-                                # 转换为Python原生类型（处理numpy int64等）
                                 valid_frags_serializable = []
                                 for f in valid_frags:
                                     if isinstance(f, (np.integer, np.int64, np.int32)):

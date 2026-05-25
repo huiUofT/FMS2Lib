@@ -1,7 +1,7 @@
 """predict_smis_trained_inten.py
 
-使用训练的生成模型和训练的强度模型进行预测
-基于 predict_smis_trained.py，但使用用户训练的强度模型
+Predict spectra with trained generation and intensity checkpoints.
+Based on predict_smis_trained.py, but uses a user-trained intensity model.
 
 """
 import sys
@@ -44,7 +44,7 @@ def get_args():
     parser.add_argument("--gpu", default=False, action="store_true")
     parser.add_argument("--seed", default=42, action="store", type=int)
     parser.add_argument("--sparse-out", default=False, action="store_true")
-    parser.add_argument("--sparse-k", default=100, action="store", type=lambda x: None if x.lower() == 'none' else int(x), help="如果指定，只保留top K个峰；如果为None，保留所有强度>threshold的峰。默认100")
+    parser.add_argument("--sparse-k", default=100, action="store", type=lambda x: None if x.lower() == 'none' else int(x), help="Keep only the top K peaks when set; if None, keep all peaks with intensity > threshold. Default: 100")
     parser.add_argument("--binned-out", default=False, action="store_true")
     parser.add_argument('--adduct-shift',default=False, action="store_true")
     parser.add_argument("--num-workers", default=0, action="store", type=int)
@@ -124,14 +124,13 @@ def predict():
     # Load checkpoints with strict=False to handle structure mismatches
     import torch as torch_module  # Ensure torch is available
     
-    # 检查CUDA是否可用，如果不可用则强制使用CPU
     if gpu and not torch_module.cuda.is_available():
-        logging.warning("CUDA不可用，强制使用CPU模式")
+        logging.warning("CUDA is not available; forcing CPU mode")
         gpu = False
     
     map_location = "cuda" if (gpu and torch_module.cuda.is_available()) else "cpu"
     
-    # 加载checkpoint以获取hyper_parameters并验证（始终使用CPU加载以避免设备问题）
+    # Always inspect checkpoint metadata on CPU to avoid device issues.
     checkpoint = torch_module.load(gen_checkpoint, map_location="cpu")
     hparams = checkpoint.get('hyper_parameters', {})
     
@@ -143,7 +142,6 @@ def predict():
                  f"embed_elem_group={hparams.get('embed_elem_group', 'N/A')}")
     logging.info(f"Using device: {map_location}")
     
-    # 加载强度模型（使用用户训练的模型）
     logging.info(f"Loading trained intensity model from: {inten_checkpoint}")
     inten_model_obj = inten_model.IntenGNN.load_from_checkpoint(
         inten_checkpoint, 
@@ -151,39 +149,33 @@ def predict():
         strict=False
     )
     
-    # 修复：如果checkpoint中有isomer_attn_out但模型中没有，需要添加并加载权重
-    # 这是因为训练时的代码版本可能不同（训练时include_unshifted_mz=True也定义了isomer_attn_out）
+    # Older checkpoints may contain isomer_attn_out when the current model does not.
     checkpoint_state = torch_module.load(inten_checkpoint, map_location="cpu")
     if 'isomer_attn_out.weight' in checkpoint_state.get('state_dict', {}):
         if not hasattr(inten_model_obj, 'isomer_attn_out'):
-            logging.info("检测到checkpoint中有isomer_attn_out但模型中没有，添加缺失的属性")
+            logging.info("Checkpoint contains isomer_attn_out; adding the missing module")
             import copy
             inten_model_obj.isomer_attn_out = copy.deepcopy(inten_model_obj.output_map)
-            # 加载checkpoint中的权重
             inten_model_obj.isomer_attn_out.load_state_dict({
                 'weight': checkpoint_state['state_dict']['isomer_attn_out.weight'],
                 'bias': checkpoint_state['state_dict']['isomer_attn_out.bias']
             })
-            logging.info("已加载isomer_attn_out权重")
+            logging.info("Loaded isomer_attn_out weights")
         else:
-            # 确保权重被正确加载（可能strict=False时没有加载）
             try:
                 inten_model_obj.isomer_attn_out.load_state_dict({
                     'weight': checkpoint_state['state_dict']['isomer_attn_out.weight'],
                     'bias': checkpoint_state['state_dict']['isomer_attn_out.bias']
                 }, strict=True)
             except:
-                pass  # 如果已经加载了就不需要再加载
+                pass
     
-    # 加载生成模型，PyTorch Lightning会自动从checkpoint中读取hyper_parameters
-    # 但我们需要确保模型正确初始化
     try:
         gen_model_obj = gen_model.FragGNN.load_from_checkpoint(
             gen_checkpoint,
             map_location=map_location, 
             strict=False
         )
-        # 验证模型参数是否正确加载
         logging.info(f"Loaded model attributes: pe_embed_k={gen_model_obj.pe_embed_k}, "
                      f"add_hs={gen_model_obj.add_hs}, "
                      f"embed_elem_group={gen_model_obj.embed_elem_group}")
@@ -191,36 +183,28 @@ def predict():
         logging.error(f"Error loading model: {e}")
         raise
     
-    # 修复pe_embed_k=0时的维度问题
-    # 当pe_embed_k=0时，random_walk_pe(k=0)仍然会返回1维embedding
-    # 但模型的root_module期望的维度不包含这1维
-    # 我们需要临时修改tree_processor的add_pe_embed方法来避免这个问题
+    # Avoid the extra positional-encoding column produced by random_walk_pe(k=0).
     original_add_pe_embed = gen_model_obj.tree_processor.add_pe_embed
     
     def patched_add_pe_embed(graph):
         if gen_model_obj.tree_processor.pe_embed_k > 0:
             return original_add_pe_embed(graph)
         else:
-            # pe_embed_k=0时，不添加PE embedding，直接返回graph
             return graph
     
     gen_model_obj.tree_processor.add_pe_embed = patched_add_pe_embed
-    logging.info("已应用monkey patch修复pe_embed_k=0时的维度问题")
+    logging.info("Applied pe_embed_k=0 compatibility patch")
     
     model = joint_model.JointModel(
         gen_model_obj=gen_model_obj, inten_model_obj=inten_model_obj
     )
     
-    # 修复inten_model的embed_instrument问题
-    # 如果model.embed_instrument=False但inten_model_obj.embed_instrument=True
-    # 需要在调用predict时处理instruments=None的情况
+    # Some intensity checkpoints expect an instrument embedding even when the joint model does not.
     if not model.embed_instrument and inten_model_obj.embed_instrument:
         original_inten_predict = inten_model_obj.predict
         
         def patched_inten_predict(*args, instruments=None, **kwargs):
-            # 如果instruments为None但embed_instrument=True，使用默认值
             if instruments is None and inten_model_obj.embed_instrument:
-                # 从adducts推断batch_size
                 adducts = kwargs.get('adducts', None)
                 if adducts is None and len(args) > 7:
                     adducts = args[7]
@@ -229,13 +213,12 @@ def predict():
                     import ms_pred.common as common
                     batch_size = len(adducts) if isinstance(adducts, (list, tuple)) else adducts.shape[0]
                     device = adducts.device if hasattr(adducts, 'device') else 'cpu'
-                    # 使用第一个instrument类型作为默认值
                     default_instrument = torch.zeros(batch_size, dtype=torch.long, device=device)
                     kwargs['instruments'] = default_instrument
             return original_inten_predict(*args, **kwargs)
         
         inten_model_obj.predict = patched_inten_predict
-        logging.info("已应用monkey patch修复inten_model的embed_instrument问题")
+        logging.info("Applied intensity-model instrument compatibility patch")
 
     avail_gpu_num = torch_module.cuda.device_count() if (gpu and torch_module.cuda.is_available()) else 0
 
@@ -259,12 +242,10 @@ def predict():
                 colli_eng_vals = ast.literal_eval(colli_eng_vals)
             adduct = entry.get("ionization", "[M+H]+")
             instrument = entry.get("instrument", "Orbitrap")
-            # 确保instrument不为None
             if instrument is None:
                 instrument = "Orbitrap"
             precursor_mz = entry.get("precursor", None)
             if precursor_mz is None:
-                # 计算precursor mass
                 from ms_pred.common import chem_utils
                 precursor_mz = chem_utils.mass_from_smi(smi)
                 if adduct:
@@ -477,12 +458,10 @@ def predict():
                 for output_spec, spec_name, smi, h5_name in \
                         zip(full_outputs["spec"], spec_names, smis, h5_names):
                     if kwargs["sparse_out"]:
-                        # 使用阈值过滤：保留强度大于threshold的峰
                         threshold = kwargs.get("threshold", 0.01)
                         valid_inds = np.where(output_spec > threshold)[0]
                         if len(valid_inds) > 0:
                             if kwargs["sparse_k"] is not None:
-                                # 只保留top K个峰
                                 top_k = min(kwargs["sparse_k"], len(valid_inds))
                                 top_k_inds = np.argsort(output_spec[valid_inds])[-top_k:][::-1]
                                 valid_inds = valid_inds[top_k_inds]
@@ -514,12 +493,10 @@ def predict():
                 for output_spec, output_frag, spec_name, smi, h5_name in \
                         zip(full_outputs["spec"], full_outputs["frag"], spec_names, smis, h5_names):
                     if kwargs["sparse_out"]:
-                        # 使用阈值过滤：保留强度大于threshold的峰
                         threshold = kwargs.get("threshold", 0.01)
                         valid_inds = np.where(output_spec[:, 1] > threshold)[0]
                         if len(valid_inds) > 0:
                             if kwargs["sparse_k"] is not None:
-                                # 只保留top K个峰
                                 top_k = min(kwargs["sparse_k"], len(valid_inds))
                                 top_k_inds = np.argsort(output_spec[valid_inds, 1])[-top_k:][::-1]
                                 valid_inds = valid_inds[top_k_inds]

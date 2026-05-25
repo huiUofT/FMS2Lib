@@ -157,11 +157,9 @@ def magma_augmentation(
     spec_content = spec_h5.read_str(spec_name)
     spec_readlines = spec_content.split('\n')
     
-    # 检查是否为MGF格式
     is_mgf = any('BEGIN IONS' in line or 'END IONS' in line for line in spec_readlines[:10])
     
     if is_mgf:
-        # 手动解析MGF格式
         meta = {}
         spectras = []
         cur_spectra = []
@@ -181,11 +179,9 @@ def magma_augmentation(
             elif "=" in line:
                 k, v = [i.strip() for i in line.split("=", 1)]
                 meta[k] = v
-                # 将PRECURSOR_MZ映射为parentmass（MGF格式使用PRECURSOR_MZ）
                 if k == "PRECURSOR_MZ":
                     meta["parentmass"] = v
             elif line and not line.startswith("#"):
-                # 峰数据
                 try:
                     parts = line.split()
                     if len(parts) >= 2:
@@ -200,7 +196,6 @@ def magma_augmentation(
             spec_h5.close()
             return {}, {}
     else:
-        # 使用SIRIUS格式解析
         meta, spectras = common.parse_spectra(spec_readlines)
 
     spec_name_clean = Path(spec_name).stem  # remove '.json'
@@ -230,13 +225,11 @@ def magma_augmentation(
         return {}, {}
 
     if merge_specs:
-        # 如果没有collision energy信息，使用默认值
         if isinstance(spectras, list) and len(spectras) > 0:
             spectra = {'collision 30.0': spectras[0][1] if len(spectras[0]) > 1 else np.array([])}
         else:
             spectra = {'collision 30.0': np.array([])}
     
-    # 确保spectra是字典格式
     if not isinstance(spectra, dict):
         if isinstance(spectras, list) and len(spectras) > 0:
             spectra = {'collision 30.0': spectras[0][1] if len(spectras[0]) > 1 else np.array([])}
@@ -455,7 +448,6 @@ def magma_augmentation(
             out_frags[k]["atoms_pulled"] = list(out_frags[k]["atoms_pulled"])
             out_frags[k]["parents"] = list(out_frags[k]["parents"])
 
-        # 解析碰撞能量
         try:
             if "collision" in colli_eng.lower():
                 colli_parts = colli_eng.split()
@@ -464,7 +456,6 @@ def magma_augmentation(
                 else:
                     collision_energy = 30.0
             else:
-                # 尝试直接转换为float
                 collision_energy = float(colli_eng) if colli_eng.replace('.', '').replace('-', '').isdigit() else 30.0
         except (ValueError, IndexError):
             collision_energy = 30.0
@@ -537,7 +528,6 @@ def run_magma_augmentation(
     spec_h5.close()
     logging.info('Write to hdf5 file output')
     
-    # 过滤掉None结果
     valid_objs = [(i, obj) for i, obj in enumerate(write_objs) if obj is not None and len(obj) == 2]
     logging.info(f'Total processed: {len(write_objs)}, Valid results: {len(valid_objs)}')
     

@@ -527,9 +527,7 @@ class FragGNN(pl.LightningModule):
             adducts = torch.LongTensor([common.ion2onehot_pos[a] if type(a) is str else a for a in adduct]).to(device)
         collision_engs = torch.FloatTensor(collision_eng).to(device)
         if self.embed_instrument:
-            # 处理instrument为None的情况，使用默认值"Orbitrap"
             default_instrument = "Orbitrap"
-            # 确保instrument是列表/元组，如果是None则使用默认值
             if instrument is None:
                 instrument = [default_instrument] * batch_size
             elif not isinstance(instrument, (list, tuple)):

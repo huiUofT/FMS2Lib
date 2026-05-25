@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 MGF mass calibration: assign_subformula, MS2 preprocessing, hard error filter,
 outlier screen (90% CI on raw error), LOWESS (fixed frac=0.1), write calibrated MGF.

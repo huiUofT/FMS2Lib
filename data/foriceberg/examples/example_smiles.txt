@@ -1,2 +1,6 @@
 # One SMILES per line; # and empty lines ignored
-CC(=O)O
+COc1ccc(C(NC(=O)NCc2ccco2)C(F)(F)F)cc1
+CCn1nc(C(C)(C)C)cc1NS(=O)(=O)c1cncc(F)c1
+CCN1CCO[C@@H](CNC(=O)Nc2c(F)cccc2Cl)[C@@H]1c1ccccc1
+CC(C)C(NS(=O)(=O)c1ccccc1F)C(=O)NC1CCNCC1
+Cc1ccc(F)cc1S(=O)(=O)N1CCOC(CN)C1

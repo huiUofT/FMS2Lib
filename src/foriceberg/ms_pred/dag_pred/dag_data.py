@@ -22,7 +22,7 @@ from torch.utils.data.dataset import Dataset
 
 import ms_pred.common as common
 import ms_pred.nn_utils as nn_utils
-from ms_pred.nn_utils.nn_utils import random_walk_pe  # 直接导入避免多进程问题
+from ms_pred.nn_utils.nn_utils import random_walk_pe
 import ms_pred.magma.fragmentation as fragmentation
 
 
@@ -294,7 +294,6 @@ class TreeProcessor:
                     new_out[bin_post] = max(new_out[bin_post], inten)
                 out_dict["inten_targs"] = new_out
             else:
-                # 如果没有intens数据，创建全零的binned targets
                 out_dict["inten_targs"] = np.zeros_like(self.bins)
         return out_dict
 
@@ -668,15 +667,12 @@ class IntenDataset(DAGDataset):
         fp = self.magma_h5.read_str(filename)
         tree = json.loads(fp)
         
-        # 如果缺少raw_spec，尝试从spec_files.hdf5提取
         if "raw_spec" not in tree and self.spec_files_h5 is not None:
             try:
                 spec_files_h5_obj = common.HDF5Dataset(self.spec_files_h5)
-                # 从filename提取spec名称（去掉_spec.json）
                 spec_name = filename.replace('_spec.json', '').replace('.json', '')
                 if spec_name in spec_files_h5_obj:
                     mgf_str = spec_files_h5_obj.read_str(spec_name)
-                    # 解析MGF格式
                     lines = mgf_str.strip().split('\n')
                     mz_list = []
                     inten_list = []
@@ -689,7 +685,7 @@ class IntenDataset(DAGDataset):
                         elif line == "END IONS":
                             break
                         elif '=' in line and not in_peaks:
-                            continue  # 元数据行
+                            continue
                         elif line and not '=' in line:
                             in_peaks = True
                             parts = line.split()
@@ -702,17 +698,13 @@ class IntenDataset(DAGDataset):
                                 except:
                                     pass
                     
-                    # 构建raw_spec格式（归一化强度为相对强度）
                     if len(mz_list) > 0 and len(inten_list) > 0:
-                        # 归一化强度为相对强度（最大值归一化）
                         max_inten = max(inten_list) if inten_list else 1.0
                         rel_inten = [i / max_inten if max_inten > 0 else 0.0 for i in inten_list]
                         
-                        # raw_spec格式: [(mz1, inten1), (mz2, inten2), ...]
                         tree["raw_spec"] = list(zip(mz_list, rel_inten))
                 spec_files_h5_obj.close()
             except Exception as e:
-                # 如果提取失败，保持原样（会在后续处理中报错）
                 pass
         
         return tree

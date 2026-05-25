@@ -1,14 +1,5 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Pipeline: subformula -> expand inter-fragment neutral losses -> per-compound NL frequency.
-
-Example (from repo root):
-  python final-database/py/nl_analysis_pipeline.py ^
-    --mgf f-paper/FMS2lib_calibrated-F.mgf ^
-    --formulas f-paper/FIg.1/origin-data/FMS2lib.csv ^
-    --output-dir f-paper/FIg.1/origin-data/nl_analysis
-"""
+"""Pipeline: subformula -> expand inter-fragment neutral losses -> per-compound NL frequency."""
 
 from __future__ import annotations
 
@@ -21,11 +12,8 @@ from pathlib import Path
 
 
 def repo_root_from_here() -> Path:
-    """Subprocess cwd: prefer ``f-paper``, else ``github`` root, else four parents (``py文件`` layout)."""
+    """Resolve a repository root for subprocess working directories."""
     p = Path(__file__).resolve()
-    for anc in p.parents:
-        if anc.name == "f-paper" and (anc / "github" / "src" / "msbuddy").is_dir():
-            return anc
     for anc in p.parents:
         if (anc / "src" / "msbuddy").is_dir() and (anc / "script").is_dir():
             return anc

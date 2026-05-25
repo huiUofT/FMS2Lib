@@ -37,7 +37,7 @@ def get_args():
     parser.add_argument("--gpu", default=False, action="store_true")
     parser.add_argument("--seed", default=42, action="store", type=int)
     parser.add_argument("--sparse-out", default=False, action="store_true")
-    parser.add_argument("--sparse-k", default=100, action="store", type=lambda x: None if x.lower() == 'none' else int(x), help="如果指定，只保留top K个峰；如果为None，保留所有强度>threshold的峰。默认100")
+    parser.add_argument("--sparse-k", default=100, action="store", type=lambda x: None if x.lower() == 'none' else int(x), help="Keep only the top K peaks when set; if None, keep all peaks with intensity > threshold. Default: 100")
     parser.add_argument("--binned-out", default=False, action="store_true")
     parser.add_argument('--adduct-shift',default=False, action="store_true")
     parser.add_argument("--num-workers", default=0, action="store", type=int)
@@ -57,7 +57,7 @@ def get_args():
     parser.add_argument("--dataset-name", default=None)
     parser.add_argument("--dataset-labels", default="labels.tsv")
     parser.add_argument("--split-name", default="split_22.tsv")
-    parser.add_argument("--threshold", default=0.01, action="store", type=float, help="强度阈值，过滤强度低于此值的峰。默认0.01")
+    parser.add_argument("--threshold", default=0.01, action="store", type=float, help="Intensity threshold for filtering low-intensity peaks. Default: 0.01")
     parser.add_argument("--max-nodes", default=100, action="store", type=int)
     parser.add_argument("--upper-limit", default=1500, action="store", type=int)
     parser.add_argument("--num-bins", default=15000, action="store", type=int)
@@ -74,14 +74,12 @@ def get_args():
 def predict():
     args = get_args()
     kwargs = args.__dict__
-    # 处理 sparse_k 为 None 的情况（从命令行传入的字符串 "None"）
     if isinstance(kwargs.get("sparse_k"), str) and kwargs.get("sparse_k").lower() == "none":
         kwargs["sparse_k"] = None
 
     save_dir = Path(kwargs["save_dir"])
     debug = kwargs["debug"]
     common.setup_logger(save_dir, log_name="joint_pred.log", debug=debug)
-    # 设置随机种子
     seed = kwargs.get("seed")
     if seed is not None:
         try:
@@ -243,22 +241,18 @@ def predict():
                 for output_spec, spec_name, smi, h5_name in \
                         zip(full_outputs["spec"], spec_names, smis, h5_names):
                     if kwargs["sparse_out"]:
-                        # 使用阈值过滤：保留强度大于threshold的峰
                         threshold = kwargs.get("threshold", 0.01)
                         valid_inds = np.where(output_spec > threshold)[0]
                         if len(valid_inds) > 0:
-                            # 按强度排序
                             valid_intens = output_spec[valid_inds]
                             sorted_order = np.argsort(valid_intens)[::-1]
                             best_inds = valid_inds[sorted_order]
-                            # 如果指定了sparse_k，则限制数量
                             sparse_k = kwargs.get("sparse_k", 100)
                             if sparse_k is not None and sparse_k > 0:
                                 best_inds = best_inds[:sparse_k]
                             best_intens = output_spec[best_inds]
                             output_spec = np.stack([best_inds, best_intens], -1)
                         else:
-                            # 如果没有有效峰，创建空数组
                             output_spec = np.zeros((0, 2), dtype=output_spec.dtype)
 
                     inchikey = common.inchikey_from_smiles(smi)
@@ -268,34 +262,27 @@ def predict():
                         zip(full_outputs["spec"], spec_names, smis, h5_names, full_outputs["frag"]):
                     assert kwargs["sparse_out"], 'sparse_out must be True for non-binned output'
                     
-                    # 使用阈值过滤：保留强度大于threshold的峰
                     threshold = kwargs.get("threshold", 0.01)
                     if len(output_spec) > 0 and output_spec.shape[1] >= 2:
                         intensities = output_spec[:, 1]
                         valid_inds = np.where(intensities > threshold)[0]
                         
                         if len(valid_inds) > 0:
-                            # 按强度排序
                             valid_intens = intensities[valid_inds]
                             sorted_order = np.argsort(valid_intens)[::-1]
                             best_inds = valid_inds[sorted_order]
                             
-                            # 如果指定了sparse_k，则限制数量
                             sparse_k = kwargs.get("sparse_k", 100)
                             if sparse_k is not None and sparse_k > 0:
                                 best_inds = best_inds[:sparse_k]
                             
                             output_spec = output_spec[best_inds, :]
                             
-                            # 处理碎片数据：确保索引不越界
                             pred_frag_array = np.array(pred_frag) if pred_frag is not None else None
                             if pred_frag_array is not None and len(pred_frag_array) > 0:
-                                # 只使用在pred_frag范围内的索引
                                 valid_frag_inds = best_inds[best_inds < len(pred_frag_array)]
                                 if len(valid_frag_inds) > 0:
-                                    # 获取对应的碎片
                                     frag_selected = pred_frag_array[valid_frag_inds]
-                                    # 对于超出范围的索引，用None填充
                                     if len(valid_frag_inds) < len(best_inds):
                                         frag_padded = [None] * len(best_inds)
                                         for i, orig_idx in enumerate(best_inds):
@@ -307,17 +294,13 @@ def predict():
                                     else:
                                         pred_frag = frag_selected.tolist()
                                 else:
-                                    # 所有索引都超出范围，用None填充
                                     pred_frag = [None] * len(best_inds)
                             else:
-                                # 没有碎片数据，用None填充
                                 pred_frag = [None] * len(best_inds)
                         else:
-                            # 没有有效峰
                             output_spec = np.zeros((0, 2), dtype=output_spec.dtype)
                             pred_frag = []
                     else:
-                        # 空谱图
                         output_spec = np.zeros((0, 2), dtype=np.float32)
                         pred_frag = []
                     
@@ -342,10 +325,8 @@ def predict():
                     try:
                         h5.write_data(h5_name + '/spec', output_spec)
                         if pred_frag is not None and len(pred_frag) > 0:
-                            # 过滤掉None值，只保存有效的碎片
                             valid_frags = [f for f in pred_frag if f is not None]
                             if len(valid_frags) > 0:
-                                # 转换为Python原生类型（处理numpy int64等）
                                 valid_frags_serializable = []
                                 for f in valid_frags:
                                     if isinstance(f, (np.integer, np.int64, np.int32)):

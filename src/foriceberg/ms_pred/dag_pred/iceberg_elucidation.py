@@ -42,7 +42,7 @@ def load_global_config(path_to_config='configs/iceberg/iceberg_elucidation.yaml'
 
 def candidates_from_pubchem(
     formula:str,
-    pubchem_form_map:str='data/retrieval/pubchem/pubchem_formulae_inchikey.hdf5',
+    pubchem_form_map:str='data/foriceberg/pubchem_formulae_inchikey.hdf5',
 ):
     """
     Get structural candidates with the same chemical formula from pubchem

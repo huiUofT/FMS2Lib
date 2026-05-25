@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Expand inter-fragment neutral losses (one row per loss). Parallelized.
 

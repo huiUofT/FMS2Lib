@@ -5,7 +5,8 @@
 # Install (typical):
 #   pip install -r requirements.txt
 #
-# ICEBERG GPU stack (torch / dgl / PyG): install CUDA-matched wheels first when needed:
+# ICEBERG GPU stack (torch / dgl / PyG): install CUDA-matched wheels first when needed.
+# The unpinned packages below are only a fallback; CUDA environments should follow:
 #   https://pytorch.org/get-started/locally/
 #   https://www.dgl.ai/pages/start.html
 #   https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html
@@ -13,7 +14,7 @@
 # Or use parent ICEBERG: source …/iceberg/activate_env.sh
 
 # --- Shared / scientific core ---
-numpy>=1.24.0
+numpy>=1.24.0,<2
 pandas>=1.3.0
 scipy>=1.10.0
 tqdm>=4.65.0

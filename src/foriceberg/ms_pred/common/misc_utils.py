@@ -38,7 +38,6 @@ class HDF5Dataset:
     """
     def __init__(self, path, mode="r"):
         self.path = path
-        # 确保path是字符串，不是Path对象
         path_str = str(path) if hasattr(path, '__str__') else path
         self.h5_obj = h5py.File(path_str, mode=mode)
         self.attrs = self.h5_obj.attrs

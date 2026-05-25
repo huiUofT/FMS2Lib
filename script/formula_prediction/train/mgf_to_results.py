@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 End-to-end: MGF + per-spectrum formulas -> Msbuddy feature matrix (joblibs) ->
 LightGBM LambdaRank train + held-out Test Top-1 metrics -> saved ranker model.
@@ -28,14 +27,10 @@ from pathlib import Path
 
 def infer_repo_root(script_dir: Path) -> Path:
     """
-    Default subprocess cwd: ``f-paper`` if under ``.../f-paper/github/...``,
-    else ``github`` export root (contains ``src/msbuddy``), else three parents above ``train/``.
+    Default subprocess cwd: repository root containing ``src/msbuddy`` and ``script``.
     Override with ``--repo-root`` if wrong.
     """
     d = script_dir.resolve()
-    for anc in d.parents:
-        if anc.name == "f-paper" and (anc / "github" / "src" / "msbuddy").is_dir():
-            return anc
     for anc in d.parents:
         if (anc / "src" / "msbuddy").is_dir() and (anc / "script").is_dir():
             return anc
@@ -64,7 +59,7 @@ def main(argv: list[str] | None = None) -> int:
         "--repo-root",
         type=Path,
         default=None,
-        help="Working directory for subprocesses (default: inferred f-paper or github root).",
+        help="Working directory for subprocesses (default: inferred repository root).",
     )
     ap.add_argument("--mgf", type=str, required=True, help="Input MGF path")
     ap.add_argument(

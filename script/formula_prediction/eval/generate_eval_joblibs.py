@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Build Msbuddy ML matrices from MGF (batched, parallel).
 
@@ -9,7 +8,7 @@ Build Msbuddy ML matrices from MGF (batched, parallel).
   ``y=0``; use a trained ranker on the joblibs to pick top-scoring formula per spectrum.
   Writes ``spectrum_ids_per_group.joblib`` and ``precursor_mz_per_group.joblib`` for outputs.
 
-``msbuddy`` is resolved from ``<github>/src`` or a parent directory containing ``msbuddy/`` (``py文件`` layout).
+``msbuddy`` is resolved from ``<repo>/src`` or a parent directory containing ``msbuddy/``.
 """
 
 import numpy as np

@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-统计中性丢失在「化合物」维度上的出现频次。
+Count neutral-loss frequencies at the compound level.
 
-规则：对每个化合物，每种 Neutral Loss Formula 只计一次；
-再在全体化合物上统计：有多少个不同的化合物出现过该 NL。
+For each compound, each Neutral Loss Formula is counted once; the final output
+reports how many distinct compounds contain each neutral loss.
 """
 
 import argparse
@@ -26,9 +25,9 @@ def load_compound_key(
     if meta_path and os.path.exists(meta_path):
         meta = pd.read_csv(meta_path)
         if meta_id_col not in meta.columns:
-            raise ValueError(f"元数据 CSV 缺少列 {meta_id_col!r}，现有: {list(meta.columns)}")
+            raise ValueError(f"Metadata CSV is missing column {meta_id_col!r}; available columns: {list(meta.columns)}")
         if compound_key not in meta.columns:
-            raise ValueError(f"元数据 CSV 缺少化合物列 {compound_key!r}，现有: {list(meta.columns)}")
+            raise ValueError(f"Metadata CSV is missing compound column {compound_key!r}; available columns: {list(meta.columns)}")
         sub = meta[[meta_id_col, compound_key]].drop_duplicates(subset=[meta_id_col])
         df = df.merge(
             sub,
@@ -40,8 +39,8 @@ def load_compound_key(
     else:
         if compound_key not in df.columns:
             raise ValueError(
-                f"未提供 --meta-csv 且展开表中无列 {compound_key!r}；"
-                f"请传入 FMS2lib.csv 或确保展开表含化合物列。现有列: {list(df.columns)}"
+                f"No --meta-csv was provided and expanded CSV has no column {compound_key!r}; "
+                f"provide metadata CSV or ensure the expanded CSV contains the compound column. Available columns: {list(df.columns)}"
             )
 
     return df
@@ -52,7 +51,7 @@ def count_nl_per_compound_unique(
     compound_col: str,
     nl_col: str = "Neutral Loss Formula",
 ):
-    """每个化合物内 NL 去重后，统计每个 NL 出现在多少个化合物中。"""
+    """Deduplicate neutral losses within each compound, then count compounds per neutral loss."""
     valid = df[df[nl_col].notna()].copy()
     valid = valid[valid[nl_col].astype(str).str.strip() != ""]
     valid = valid[valid[nl_col].astype(str) != "No match"]
@@ -78,30 +77,30 @@ def count_nl_per_compound_unique(
 
 def main():
     ap = argparse.ArgumentParser(
-        description="按化合物去重后统计中性丢失出现频次（化合物数）"
+        description="Count neutral-loss frequencies after deduplicating within each compound."
     )
     ap.add_argument(
         "-i",
         "--expanded-csv",
         required=True,
-        help="calculate_inter_fragment_nl 展开后的 CSV",
+        help="Expanded CSV written by calculate_inter_fragment_nl.",
     )
     ap.add_argument(
         "-m",
         "--meta-csv",
         default=None,
-        help="可选：含 FEATURE_ID 与化合物列的元数据（如 FMS2lib.csv）",
+        help="Optional metadata CSV with FEATURE_ID and a compound identifier column.",
     )
     ap.add_argument(
         "--compound-key",
         default="SMILES",
-        help="化合物唯一标识列（默认 SMILES；也可用 REF_FORMULA 等）",
+        help="Compound identifier column, for example SMILES or REF_FORMULA.",
     )
     ap.add_argument(
         "-o",
         "--output",
         required=True,
-        help="输出频次表 CSV（列: Neutral Loss Formula, n_compounds）",
+        help="Output frequency CSV with Neutral Loss Formula and n_compounds columns.",
     )
     args = ap.parse_args()
 
@@ -118,9 +117,9 @@ def main():
         os.makedirs(_odir, exist_ok=True)
     freq_df.to_csv(args.output, index=False, encoding="utf-8-sig")
 
-    print(f"化合物数（有至少一条有效 NL 的 group）: {n_compounds}")
-    print(f"不同中性丢失类型数: {len(freq_df)}")
-    print(f"已写入: {args.output}")
+    print(f"Compounds with at least one valid neutral loss: {n_compounds}")
+    print(f"Distinct neutral-loss formulas: {len(freq_df)}")
+    print(f"Wrote: {args.output}")
 
 
 if __name__ == "__main__":

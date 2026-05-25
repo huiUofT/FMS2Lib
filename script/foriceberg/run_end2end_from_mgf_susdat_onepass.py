@@ -58,6 +58,7 @@ def parse_args() -> argparse.Namespace:
 	parser.add_argument("--sparse-k", type=int, default=100)
 	parser.add_argument("--max-nodes", type=int, default=5000)
 	parser.add_argument("--threshold", type=float, default=0.05)
+	parser.add_argument("--gpu", action="store_true")
 	return parser.parse_args()
 
 
@@ -257,6 +258,8 @@ def main() -> None:
 		"--max_nodes", str(args.max_nodes),
 		"--threshold", str(args.threshold),
 	]
+	if args.gpu:
+		cmd.append("--gpu")
 	subprocess.run(cmd, check=True)
 
 	# Evaluation with standardized SMILES and coverage

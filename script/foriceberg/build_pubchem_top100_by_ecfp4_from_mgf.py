@@ -12,12 +12,13 @@ from rdkit import Chem, DataStructs, RDLogger
 from rdkit.Chem import AllChem
 from rdkit.Chem.rdMolDescriptors import CalcMolFormula
 from tqdm import tqdm
+from foriceberg_paths import pubchem_hdf5
 RDLogger.DisableLog('rdApp.*')
 
 def parse_args():
     p=argparse.ArgumentParser()
     p.add_argument("--mgf", type=Path, required=True)
-    p.add_argument("--pubchem-hdf5", type=Path, required=True)
+    p.add_argument("--pubchem-hdf5", type=Path, default=pubchem_hdf5())
     p.add_argument("--out-csv", type=Path, required=True)
     p.add_argument("--max-topk", type=int, default=100)
     p.add_argument("--workers", type=int, default=1, help="Parallel worker processes")
@@ -195,6 +196,11 @@ def process_chunk(chunk:List[Dict[str, List[str]]], h5_path:str, max_topk:int)->
 
 def main():
     args=parse_args()
+    if not args.pubchem_hdf5.is_file():
+        raise SystemExit(
+            f"Missing PubChem HDF5: {args.pubchem_hdf5}\n"
+            "Download it first with: python script/foriceberg/download_pubchem_hdf5.py"
+        )
     blocks=parse_mgf_blocks(args.mgf)
     rows=[]
     if args.workers <= 1:

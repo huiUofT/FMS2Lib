@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Train a single LightGBM LambdaRank model on combined MS1+MS2 (+ formula) features
 (columns 1..52 of X_arr from generate_training_data).

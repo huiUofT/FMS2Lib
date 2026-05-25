@@ -148,7 +148,7 @@ def run_predictor(
     save_dir: Path,
     args: argparse.Namespace,
 ) -> Path:
-    pred_py = REPO_ROOT / "src/ms_pred/dag_pred/predict_smis_trained_inten.py"
+    pred_py = Path(pythonpath_src()) / "ms_pred/dag_pred/predict_smis_trained_inten.py"
     if not pred_py.is_file():
         sys.exit(f"Predict script not found: {pred_py}")
 

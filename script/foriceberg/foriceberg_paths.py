@@ -47,6 +47,10 @@ def results_dir() -> Path:
     return repo_root() / "script" / _SUB / "results"
 
 
+def pubchem_hdf5() -> Path:
+    return data_dir() / "pubchem_formulae_inchikey.hdf5"
+
+
 def data_spec_datasets(*parts: str) -> Path:
     return data_dir() / "spec_datasets" / Path(*parts)
 

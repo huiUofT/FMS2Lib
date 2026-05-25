@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Build Msbuddy ML training matrices from MGF + formulas (batched, parallel)."""
 
 import numpy as np
@@ -17,7 +16,7 @@ from joblib import Parallel, delayed
 
 
 def _prepend_msbuddy_on_path() -> None:
-    """Prefer ``<github>/src/msbuddy``; else parent dir that contains ``msbuddy/`` (``py文件`` layout)."""
+    """Prefer ``<repo>/src/msbuddy``; else a parent directory containing ``msbuddy/``."""
     for anc in Path(__file__).resolve().parents:
         if (anc / "src" / "msbuddy").is_dir():
             s = str(anc / "src")

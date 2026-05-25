@@ -30,7 +30,7 @@ from rdkit import Chem, RDLogger
 
 RDLogger.DisableLog("rdApp.*")
 
-from foriceberg_paths import github_root, mode_dir, pythonpath_src, repo_root, script_dir, src_dir
+from foriceberg_paths import github_root, mode_dir, pubchem_hdf5, pythonpath_src, repo_root, script_dir, src_dir
 
 _SCRIPT_DIR = script_dir()
 _GITHUB_ROOT = repo_root()
@@ -83,7 +83,7 @@ def parse_args() -> argparse.Namespace:
         "--pubchem-hdf5",
         type=Path,
         default=None,
-        help="PubChem-by-formula HDF5 (same layout as build_pubchem_top100_by_ecfp4_from_mgf). Optional if --susdat is set.",
+        help=f"PubChem-by-formula HDF5. Download with download_pubchem_hdf5.py; default location is {pubchem_hdf5()}. Optional if --susdat is set.",
     )
     p.add_argument("--out-dir", type=Path, required=True, help="Output directory (labels, preds, tables)")
     p.add_argument("--gen-checkpoint", type=Path, default=_DEFAULT_GEN)
@@ -334,6 +334,11 @@ def main() -> None:
     susdat_map = load_susdat_by_formula(args.susdat) if args.susdat else None
 
     pubchem_path = args.pubchem_hdf5
+    if pubchem_path and not pubchem_path.is_file():
+        sys.exit(
+            f"Missing PubChem HDF5: {pubchem_path}\n"
+            "Download it first with: python script/foriceberg/download_pubchem_hdf5.py"
+        )
     h5_ctx = h5py.File(pubchem_path, "r") if pubchem_path else None
 
     cand_rows_for_labels: List[Dict[str, str]] = []
