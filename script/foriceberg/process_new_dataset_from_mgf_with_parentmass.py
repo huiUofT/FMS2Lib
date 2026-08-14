@@ -88,6 +88,11 @@ def create_labels_tsv(spectra, output_path):
         f_count = smiles.count("F")
         collision_energy = spec.get("collision_energy", "30.0")
 
+        instrument = spec.get("instrument", "Orbitrap") or "Orbitrap"
+        # Training embeddings only know Orbitrap/QTOF; HCD (Orbitrap fragmentation) → Orbitrap.
+        if str(instrument).strip().upper() in {"HCD", "HCD (ORBITRAP)", "ORBITRAP-HCD"}:
+            instrument = "Orbitrap"
+
         labels_data.append(
             {
                 "spec": spec["spec"],
@@ -95,7 +100,7 @@ def create_labels_tsv(spectra, output_path):
                 "inchikey": inchikey if inchikey else "",
                 "ionization": spec.get("adduct", "[M+H]+"),
                 "precursor": spec["precursor_mz"],
-                "instrument": spec.get("instrument", "Orbitrap"),
+                "instrument": instrument,
                 "collision_energies": f"['{collision_energy}']",
                 "f_count": f_count,
             }

@@ -1,0 +1,4 @@
+name,SMILES
+query_true,CN(Cc1ncon1)C(=O)c1cnn(-c2ccccc2F)c1-n1cccc1
+near_analog,COCc1c(-c2nc(-c3ccc(C)nc3)no2)nnn1-c1ccccc1F
+far_distractor,Cc1ccc(F)cc1S(=O)(=O)N1CCOC(CN)C1

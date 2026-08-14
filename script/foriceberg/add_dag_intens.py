@@ -8,17 +8,29 @@ Example::
       --out-dag-folder /path/to/out_dags.hdf5 \\
       --num-workers 4
 """
-import json
+from __future__ import annotations
+
 import argparse
 import copy
+import json
+import sys
 from pathlib import Path
 from typing import Tuple
 
 from tqdm import tqdm
-import re
 
-import ms_pred.magma.run_magma as run_magma
-import ms_pred.common as common
+_SCRIPT_DIR = Path(__file__).resolve().parent
+if str(_SCRIPT_DIR) not in sys.path:
+    sys.path.insert(0, str(_SCRIPT_DIR))
+
+from foriceberg_paths import pythonpath_src  # noqa: E402
+
+_SRC = pythonpath_src()
+if _SRC not in sys.path:
+    sys.path.insert(0, _SRC)
+
+import ms_pred.common as common  # noqa: E402
+import ms_pred.magma.run_magma as run_magma  # noqa: E402
 
 
 def get_args():
