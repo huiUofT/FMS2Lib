@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""
+"""This code was adapted from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+The ICEBERG model was retrained using an in-house MS/MS dataset of
+low-fluorinated compounds. Modifications include dataset preparation,
+data splitting, model training, and performance evaluation.
+
+Modifications by: Tao Yang
+Date: 20260819
+
+The original copyright notice and license terms are retained.
+
 Full fine-tune of ``FragGNN`` (generation model): load a pretrained checkpoint and
 train **all** parameters (no freezing).
 
@@ -9,13 +23,13 @@ Requires MAGMA trees at
 Example::
 
     cd /path/to/FMS2Lib
-    python3 script/foriceberg/finetune_gen_full.py \\
-      --pretrained-checkpoint mode/foriceberg/generation/best.ckpt \\
-      --dataset-name F_ICEBERG_dataset \\
-      --split-name split_1.tsv \\
-      --save-dir script/foriceberg/results/gen_finetune_full \\
-      --learning-rate 1e-4 \\
-      --max-epochs 200 \\
+    python3 script/foriceberg/finetune_gen_full.py \
+      --pretrained-checkpoint mode/foriceberg/generation/best.ckpt \
+      --dataset-name F_ICEBERG_dataset \
+      --split-name split_1.tsv \
+      --save-dir script/foriceberg/results/gen_finetune_full \
+      --learning-rate 1e-4 \
+      --max-epochs 200 \
       --gpu
 """
 from __future__ import annotations

@@ -1,5 +1,21 @@
 #!/usr/bin/env python3
-"""Pipeline: subformula -> expand inter-fragment neutral losses -> per-compound NL frequency."""
+"""This code was adapted from the BUDDY implementation developed by
+Xing et al.
+
+Original repository:
+https://github.com/HuanLab/BUDDY
+
+The BUDDY model was retrained using an in-house MS/MS dataset of
+low-fluorinated compounds. Modifications include data preprocessing,
+dataset splitting, model training, and performance evaluation.
+
+Modifications by: Tao Young
+Date: August 20260819
+
+The original copyright notice and license terms are retained.
+
+Pipeline: subformula -> expand inter-fragment neutral losses -> per-compound NL frequency.
+"""
 
 from __future__ import annotations
 

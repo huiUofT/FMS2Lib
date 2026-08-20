@@ -5,7 +5,16 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at https://github.com/Philipbear/msbuddy/blob/main/LICENSE
 # ==============================================================================
-"""
+"""This code was obtained from the original BUDDY implementation developed by
+Xing et al.
+
+Original repository:
+https://github.com/HuanLab/BUDDY
+
+No modifications were made to the original code.
+
+The original copyright notice and license terms are retained.
+
 File: base.py
 Author: Shipei Xing
 Email: philipxsp@hotmail.com

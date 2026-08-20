@@ -1,4 +1,19 @@
-"""Path helpers for ICEBERG assets under FMS2Lib ``*/foriceberg/`` folders.
+"""This code was adapted from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+The ICEBERG model was retrained using an in-house MS/MS dataset of
+low-fluorinated compounds. Modifications include dataset preparation,
+data splitting, model training, and performance evaluation.
+
+Modifications by: Tao Yang
+Date: 20260819
+
+The original copyright notice and license terms are retained.
+
+Path helpers for ICEBERG assets under FMS2Lib ``*/foriceberg/`` folders.
 
 Set ``ICEBERG_GITHUB_ROOT`` to override auto-detected repo root (same as ``FMS2LIB``).
 """

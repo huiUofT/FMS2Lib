@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""
+"""This code was adapted from the BUDDY implementation developed by
+Xing et al.
+
+Original repository:
+https://github.com/HuanLab/BUDDY
+
+The BUDDY model was retrained using an in-house MS/MS dataset of
+low-fluorinated compounds. Modifications include data preprocessing,
+dataset splitting, model training, and performance evaluation.
+
+Modifications by: Tao Young
+Date: August 20260819
+
+The original copyright notice and license terms are retained.
+
 MGF mass calibration: assign_subformula, MS2 preprocessing, hard error filter,
 outlier screen (90% CI on raw error), LOWESS (fixed frac=0.1), write calibrated MGF.
 

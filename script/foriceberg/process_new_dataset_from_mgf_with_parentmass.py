@@ -1,5 +1,20 @@
 #!/usr/bin/env python3
-"""Build ICEBERG spec_datasets from MGF (labels.tsv, spec_files.hdf5, split TSV).
+"""This code was adapted from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+The ICEBERG model was retrained using an in-house MS/MS dataset of
+low-fluorinated compounds. Modifications include dataset preparation,
+data splitting, model training, and performance evaluation.
+
+Modifications by: Tao Yang
+Date: 20260819
+
+The original copyright notice and license terms are retained.
+
+Build ICEBERG spec_datasets from MGF (labels.tsv, spec_files.hdf5, split TSV).
 
 See repo ``README.md``.
 """

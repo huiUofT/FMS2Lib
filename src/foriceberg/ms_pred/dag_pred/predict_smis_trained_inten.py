@@ -1,8 +1,17 @@
-"""predict_smis_trained_inten.py
+"""This code was obtained from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+No modifications were made to the original code.
+
+The original copyright notice and license terms are retained.
+
+predict_smis_trained_inten.py
 
 Predict spectra with trained generation and intensity checkpoints.
 Based on predict_smis_trained.py, but uses a user-trained intensity model.
-
 """
 import sys
 from pathlib import Path

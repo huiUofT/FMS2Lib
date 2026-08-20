@@ -1,4 +1,15 @@
-""" joint_model. """
+"""This code was obtained from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+No modifications were made to the original code.
+
+The original copyright notice and license terms are retained.
+
+joint_model.
+"""
 from collections import defaultdict
 import numpy as np
 import pytorch_lightning as pl

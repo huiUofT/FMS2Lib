@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""
+"""This code was adapted from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+The ICEBERG model was retrained using an in-house MS/MS dataset of
+low-fluorinated compounds. Modifications include dataset preparation,
+data splitting, model training, and performance evaluation.
+
+Modifications by: Tao Yang
+Date: 20260819
+
+The original copyright notice and license terms are retained.
+
 Fine-tune ``IntenGNN`` from a checkpoint while training **only selected modules**.
 
 Top-level ``IntenGNN`` blocks (use with ``--train-modules`` or ``--preset``):
@@ -24,13 +38,13 @@ Presets (``--preset``):
 Example::
 
     cd /path/to/FMS2Lib
-    python3 script/foriceberg/finetune_inten_partial_layers.py \\
-      --pretrained-checkpoint mode/foriceberg/intensity/best.ckpt \\
-      --save-dir results/inten_finetune_before_mlp \\
-      --preset before_mlp \\
-      --dataset-name F_ICEBERG_dataset \\
-      --split-name split_1.tsv \\
-      --magma-dag-folder results/.../preds_train_100_inten.hdf5 \\
+    python3 script/foriceberg/finetune_inten_partial_layers.py \
+      --pretrained-checkpoint mode/foriceberg/intensity/best.ckpt \
+      --save-dir results/inten_finetune_before_mlp \
+      --preset before_mlp \
+      --dataset-name F_ICEBERG_dataset \
+      --split-name split_1.tsv \
+      --magma-dag-folder results/.../preds_train_100_inten.hdf5 \
       --gpu
 """
 from __future__ import annotations

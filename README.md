@@ -438,6 +438,48 @@ data/foriceberg/spec_datasets/F_ICEBERG_dataset/magma_outputs/magma_tree.hdf5
 data/foriceberg/spec_datasets/F_ICEBERG_dataset/subformulae/no_subform.hdf5
 ```
 
+### 5.9 HF Tag Classifier (ported from `hf-predict`)
+
+The HF binary tag training scripts are available at:
+
+```text
+script/foriceberg/hf_predict/train_tag_graph_transformer_hf.py
+script/foriceberg/hf_predict/smiles_graph_transformer_hf.py
+```
+
+Training CSV is stored at:
+
+```text
+data/foriceberg/hf_predict/tag.csv
+```
+
+Run retraining with:
+
+```bash
+cd "${FMS2LIB}/script/foriceberg/hf_predict"
+python train_tag_graph_transformer_hf.py \
+  --train_csv "${FMS2LIB}/data/foriceberg/hf_predict/tag.csv" \
+  --out_dir "${FMS2LIB}/script/foriceberg/results/hf_predict/output_g3_t2_bs200" \
+  --epochs 30 \
+  --batch_size 200 \
+  --lr 1e-4 \
+  --weight_decay 1e-4 \
+  --dropout 0.1 \
+  --hidden_dim 192 \
+  --fusion_hidden 256 \
+  --num_layers 5 \
+  --ggnn_layers 3 \
+  --transformer_layers 2 \
+  --num_heads 4 \
+  --col_emb_dim 24 \
+  --val_frac 0.1 \
+  --test_frac 0.1 \
+  --num_workers 4 \
+  --seed 2026 \
+  --split_mode scaffold \
+  --use_class_weights
+```
+
 #### Optional — 100-spectrum smoke check
 
 To verify the same Path A commands on a tiny subset, use `data/foriceberg/examples/F_ICEBERG_train100.mgf` and set `DATASET=F_ICEBERG_train100`. That run only validates the pipeline; it is not a production model.

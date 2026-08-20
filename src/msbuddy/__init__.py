@@ -1,3 +1,14 @@
+"""This code was obtained from the original BUDDY implementation developed by
+Xing et al.
+
+Original repository:
+https://github.com/HuanLab/BUDDY
+
+No modifications were made to the original code.
+
+The original copyright notice and license terms are retained.
+"""
+
 from .cand import assign_subformula
 from .base import Formula, Spectrum, Adduct, MetaFeature
 from .main import Msbuddy, MsbuddyConfig

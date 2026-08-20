@@ -1,7 +1,16 @@
-"""train_inten.py
+"""This code was obtained from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+No modifications were made to the original code.
+
+The original copyright notice and license terms are retained.
+
+train_inten.py
 
 Train model to predict emit intensities for each fragment
-
 """
 import logging
 import yaml

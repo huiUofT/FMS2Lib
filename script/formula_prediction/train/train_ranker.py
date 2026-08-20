@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""
+"""This code was adapted from the BUDDY implementation developed by
+Xing et al.
+
+Original repository:
+https://github.com/HuanLab/BUDDY
+
+The BUDDY model was retrained using an in-house MS/MS dataset of
+low-fluorinated compounds. Modifications include data preprocessing,
+dataset splitting, model training, and performance evaluation.
+
+Modifications by: Tao Young
+Date: August 20260819
+
+The original copyright notice and license terms are retained.
+
 Train a single LightGBM LambdaRank model on combined MS1+MS2 (+ formula) features
 (columns 1..52 of X_arr from generate_training_data).
 

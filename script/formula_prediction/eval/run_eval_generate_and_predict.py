@@ -1,5 +1,19 @@
 #!/usr/bin/env python3
-"""
+"""This code was adapted from the BUDDY implementation developed by
+Xing et al.
+
+Original repository:
+https://github.com/HuanLab/BUDDY
+
+The BUDDY model was retrained using an in-house MS/MS dataset of
+low-fluorinated compounds. Modifications include data preprocessing,
+dataset splitting, model training, and performance evaluation.
+
+Modifications by: Tao Young
+Date: August 20260819
+
+The original copyright notice and license terms are retained.
+
 End-to-end eval helper:
 
 1) Call ``generate_eval_joblibs.prepare_training_data`` (**MGF + optional formulas**, or ``--mgf-only``).

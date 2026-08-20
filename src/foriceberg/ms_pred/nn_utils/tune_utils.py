@@ -1,9 +1,18 @@
-"""tune_utils.
+"""This code was obtained from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+No modifications were made to the original code.
+
+The original copyright notice and license terms are retained.
+
+tune_utils.
 
 Minor change to TuneReportCallback such that it can report the best metric value
 so far, rather than the last metric after model patience has stopped the
 training run.
-
 """
 import logging
 from typing import Dict, List, Optional, Union

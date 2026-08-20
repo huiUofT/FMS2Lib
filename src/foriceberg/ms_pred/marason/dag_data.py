@@ -1,7 +1,16 @@
-""" dag_data.py
+"""This code was obtained from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+No modifications were made to the original code.
+
+The original copyright notice and license terms are retained.
+
+dag_data.py
 
 Fragment dataset to build out model class
-
 """
 import logging
 from pathlib import Path

@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""
+"""This code was obtained from the ICEBERG implementation developed by
+Goldman et al.
+
+Original repository:
+https://github.com/samgoldman97/ms-pred
+
+No modifications were made to the original code.
+
+The original copyright notice and license terms are retained.
+
 Same pipeline as run_iceberg_retrieval_eval.py, but scoring uses evaluate_test_set-style
 dist_bin cosine; writes per-spectrum rows to per_spectrum_retrieval.tsv in addition to
 top1_summary.csv.
