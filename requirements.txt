@@ -1,17 +1,11 @@
-# FMS2Lib — combined dependencies
-#   • MSBuddy / formula_prediction (ranker, calibration, NL pipeline)
-#   • ICEBERG foriceberg (script/foriceberg, src/foriceberg/ms_pred, retrain)
-#
-# Install (typical):
-#   pip install -r requirements.txt
-#
-# ICEBERG GPU stack (torch / dgl / PyG): install CUDA-matched wheels first when needed.
-# The unpinned packages below are only a fallback; CUDA environments should follow:
-#   https://pytorch.org/get-started/locally/
-#   https://www.dgl.ai/pages/start.html
-#   https://pytorch-geometric.readthedocs.io/en/latest/install/installation.html
-# On HPC, RDKit is often easier via: conda install -c conda-forge rdkit
-# Or use parent ICEBERG: source …/iceberg/activate_env.sh
+# FMS2Lib dependencies (CPU default).
+#   python -m pip install -r requirements.txt
+# For CUDA, install matching torch / dgl / PyG wheels for your system instead of the
+# pinned CPU blocks below (https://pytorch.org, https://www.dgl.ai, PyG docs).
+
+# Keep setuptools <82 (pytorch-lightning 1.x needs pkg_resources).
+setuptools>=69,<82
+wheel
 
 # --- Shared / scientific core ---
 numpy>=1.24.0,<2
@@ -33,12 +27,31 @@ chemparse>=0.1.2
 numba>=0.57.0
 statsmodels>=0.14.0
 
-# --- ICEBERG foriceberg (ms_pred, MAGMA, retrain) ---
+# --- ICEBERG helpers ---
 multiprocess>=0.70
 einops>=0.4
 networkx>=2.6
 pytorch-lightning>=1.6,<2.0
-torch
-dgl
-torch-geometric
+matplotlib>=3.7
+seaborn>=0.12
+pygmtools>=0.4
+pydantic>=1.10
+ray[tune]>=2.0
 rdkit>=2022.9.1
+
+# --- PyTorch (CPU) ---
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1
+torchvision
+torchaudio
+torchdata
+
+# --- PyTorch Geometric extensions (must match torch 2.5.1+cpu) ---
+--find-links https://data.pyg.org/whl/torch-2.5.1+cpu.html
+torch-scatter
+torch-sparse
+torch-geometric
+
+# --- DGL ---
+--find-links https://data.dgl.ai/wheels/repo.html
+dgl
