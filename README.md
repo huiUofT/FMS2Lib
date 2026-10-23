@@ -1,6 +1,40 @@
 # FMS2Lib
 
-FMS2Lib is an MS/MS spectral library of 35,000 low-fluorinated compounds for machine learning-assisted nontargeted analysis. This repository provides two workflow modules: formula prediction and structure annotation.
+FMS2Lib is an MS/MS spectral library of approximately 35,000 low-fluorinated compounds for machine learning-assisted nontargeted analysis. This repository provides two workflow modules: formula prediction and structure annotation.
+
+**Our article:** [FMS2Lib preprint on ChemRxiv](https://doi.org/10.26434/chemrxiv.15010212/v1).
+
+**License:** original FMS2Lib software and documentation are available under the [MIT License](LICENSE). Third-party code retains its original licenses; see [third-party code and licenses](#third-party-code-and-licenses) for license scope.
+
+### Code sources and attribution
+
+We directly use code from the following projects in these workflows:
+
+- **ICEBERG**, developed by Goldman et al., from [samgoldman97/ms-pred](https://github.com/samgoldman97/ms-pred). The code is included under `src/foriceberg/ms_pred/` and is used for spectrum prediction and structure annotation. FMS2Lib provides workflow scripts and retrained models using the project dataset.
+- **MSBuddy**, developed by Xing et al., from [Philipbear/msbuddy](https://github.com/Philipbear/msbuddy), with the related [HuanLab/BUDDY](https://github.com/HuanLab/BUDDY) project referenced in the source headers. The Python code is included under `src/msbuddy/` and is used for candidate molecular formula generation, subformula assignment, and feature generation for formula ranking.
+
+ICEBERG and MSBuddy are third-party implementations; their original methods and code are credited to their respective authors. The bundled files include upstream code and local adaptations, so they should not be assumed to be an exact copy of the latest upstream release. See [third-party code and licenses](#third-party-code-and-licenses) for license texts and local modification notices.
+
+The full MGF contains **63,046 spectra**: 34,686 entries with fluorine in their SMILES and 28,360 without fluorine. The approximately 35,000 figure refers to the fluorinated subset, not the entire training input. See [data and model provenance](docs/DATA_AND_MODELS.md) for file availability and validation limits.
+
+### Third-party code and licenses
+
+| Component | Bundled location | Upstream source | License copy |
+|---|---|---|---|
+| ICEBERG / ms-pred, Goldman et al. | `src/foriceberg/ms_pred/` and adapted workflow scripts | [samgoldman97/ms-pred](https://github.com/samgoldman97/ms-pred) | [MIT, copyright 2023 Samuel Goldman](LICENSES/ICEBERG-MIT.txt) |
+| MSBuddy, Xing et al. | `src/msbuddy/` | [Philipbear/msbuddy](https://github.com/Philipbear/msbuddy) | [Apache License 2.0](LICENSES/MSBuddy-Apache-2.0.txt); retain the existing Shipei Xing copyright notices |
+| Microsoft Graphormer-derived algorithm | `src/foriceberg/ms_pred/massformer_pred/massformer_code/algos2.pyx` and its generated artifacts | [microsoft/Graphormer](https://github.com/microsoft/Graphormer) | [MIT, Microsoft Corporation](LICENSES/Graphormer-MIT.txt), consistent with the bundled source header |
+| OGB preprocessing excerpt | `gf_preprocess` in `src/foriceberg/ms_pred/massformer_pred/massformer_code/gf_data_utils.py` | [snap-stanford/ogb](https://github.com/snap-stanford/ogb), as linked in the function docstring | [MIT, copyright 2019 OGB Team](LICENSES/OGB-MIT.txt) |
+
+The MSBuddy source headers also reference the related [HuanLab/BUDDY](https://github.com/HuanLab/BUDDY) project. The Python files in `src/msbuddy/` identify MSBuddy and retain Apache-2.0 notices; the related project's license is not substituted for those notices.
+
+The accompanying license copies supplement the existing source notices. The exact upstream commits used for the original code imports were not recorded.
+
+Source headers identify adapted workflows and local model retraining. Upstream author information and copyright notices are retained. A syntax correction to the `selected_evs` dictionary comprehension in `retrieval_benchmark_torchmetrics.py` is noted in its source header.
+
+Original FMS2Lib software and documentation contributions are licensed under the [MIT License](LICENSE). Third-party code retains its original copyright notices and licenses listed above. The MIT license for original FMS2Lib software does not replace those licenses or assign new reuse terms to third-party data, externally downloaded assets, or model weights. See [data and model provenance](docs/DATA_AND_MODELS.md) for source information and asset scope.
+
+When citing the workflows, credit the relevant upstream software as well as the [FMS2Lib article](https://doi.org/10.26434/chemrxiv.15010212/v1).
 
 ## 1. Installation
 
@@ -9,17 +43,27 @@ FMS2Lib is an MS/MS spectral library of 35,000 low-fluorinated compounds for mac
 ```bash
 git clone https://github.com/huiUofT/FMS2Lib.git
 cd FMS2Lib
+git lfs install
 git lfs pull
 ```
 
 ### Environment
 
+Install Git LFS before cloning or pulling the HDF5 asset. See the [validated CPU environments and results](docs/VALIDATION.md) before installing dependencies. The following is the general dependency specification; its open-ended version ranges do not select the exact environments used in validation. Run these commands from the repository root, in a separate Python environment:
+
 ```bash
-pip install -r requirements.txt
-pip install -e .
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
 ```
 
-For CUDA workflows, install `torch`, `dgl`, and `torch-geometric` wheels that match the local CUDA/Python environment.
+This repository uses a source-directory layout without Python packaging metadata. Set `PYTHONPATH` as shown below before running the workflows.
+
+Small-scale CPU inference was validated with Python 3.11. The formula environment used **LightGBM 4.5.0 and scikit-learn 1.5.2**; LightGBM 4.5.0 with scikit-learn 1.8.0 failed during prediction. The ICEBERG environment used **PyTorch 2.5.1+cpu, DGL 1.1.3**, and PyG extensions built for PyTorch 2.5 CPU. Both bundled checkpoints record **Lightning 2.6.1**; the tested **Lightning 1.9.5** loaded them with a version warning and completed the CPU examples. Full training and GPU compatibility have not been validated. `requirements.txt` is a general specification rather than a tested lock file. See the [separate CPU profiles](docs/VALIDATION.md#environment-records); a combined environment has not been verified.
+
+For CUDA workflows, install `torch`, `dgl`, and `torch-geometric` wheels that match the local CUDA/Python environment. Most structure annotation examples below request a GPU explicitly; remove `--gpu` for CPU execution. The validation commands in the linked report use CPU execution and explicitly limit the candidate count for the end-to-end example.
+
+Some auxiliary modules use packages not explicitly listed in the requirements, including `pathos` (parallel helpers), `cairosvg` (PDF rendering), `ipdb` (legacy modules), and `platformdirs` / `pubchempy` (elucidation utilities). Alternate XGBoost model loading requires `xgboost`. The fixed candidate-pool script parses `.xlsx` inputs using the Python standard library and does not require `openpyxl`. These optional or workflow-specific dependencies have not been added to the existing environment specification.
 
 ### Environment Variables
 
@@ -41,7 +85,7 @@ This downloads:
 data/foriceberg/pubchem_formulae_inchikey.hdf5
 ```
 
-Download it before running workflows that use `--pubchem-hdf5` or regenerate PubChem candidate CSVs.
+Download it before running workflows that use `--pubchem-hdf5` or regenerate PubChem candidate CSVs. This external PubChem database is separate from the bundled training spectra; there is no FMS2Lib retraining archive to download. See [data and model provenance](docs/DATA_AND_MODELS.md) for the source URL and download limitations.
 
 ## 2. Core Workflow: MS/MS to Structure Annotation
 
@@ -51,7 +95,7 @@ For nontargeted structure annotation from an experimental MS/MS spectrum, first 
 EX=data/foriceberg/examples
 PUBCHEM=data/foriceberg/pubchem_formulae_inchikey.hdf5
 FORMULA_OUT=script/formula_prediction/results/formula_pred_test10
-RANKER_MODEL=/path/to/model_ms1_ms2_ranker.joblib
+RANKER_MODEL=mode/model_ms1_ms2_ranker.joblib
 
 # Step 1: MS/MS -> predicted molecular formula.
 python script/formula_prediction/eval/run_eval_generate_and_predict.py \
@@ -74,7 +118,9 @@ python script/foriceberg/blind_retrieval_from_pred_formula.py \
   --gpu
 ```
 
-The bundled example also includes a precomputed prediction CSV at `${EX}/predictions_model_ms1_ms2_ranker.csv`, which can be used directly for testing Step 2.
+The bundled example also includes a precomputed prediction CSV at `${EX}/predictions_model_ms1_ms2_ranker.csv`, which can be used directly for testing Step 2. For this ten-spectrum example, the bundled SusDat table has no candidates matching the predicted formulas, so the PubChem input is needed to obtain structure annotations. If all spectra lack candidates, the current script writes `skipped_spectra.csv` and exits with status 0 without producing the annotation CSV; inspect the outputs as well as the exit status.
+
+Run commands from the repository root after setting the environment variables in §1. The formula step writes the prediction CSV above; the structure step writes candidate and annotation outputs under the requested `--out-dir`. The examples describe expected file locations, not independently reproduced article metrics.
 
 ## 3. Script Overview
 
@@ -153,6 +199,8 @@ python script/formula_prediction/netural_loss/nl_analysis_pipeline.py \
 
 Generate MSBuddy features and train a LightGBM formula ranker.
 
+The ten-spectrum input below illustrates the interface. Formula-stratified splitting can leave small strata without training examples, so this is not a validated training benchmark or a replacement for a full training dataset.
+
 ```bash
 python script/formula_prediction/train/mgf_to_results.py \
   --mgf data/testdataset/F_ICEBERG_calibrated_test10.mgf \
@@ -164,6 +212,8 @@ python script/formula_prediction/train/mgf_to_results.py \
 ### 4.4 Evaluate Formula Ranker
 
 Generate eval features and run a trained ranker.
+
+The command below expects a model produced by §4.3. To use the bundled model instead, set `--model mode/model_ms1_ms2_ranker.joblib`.
 
 ```bash
 python script/formula_prediction/eval/run_eval_generate_and_predict.py \
@@ -275,6 +325,8 @@ python script/foriceberg/run_iceberg_retrieval_eval_evaltest.py \
 
 Generate PubChem top100 candidates by ECFP4 similarity.
 
+This benchmark uses the known true SMILES to select similar candidates and explicitly includes the true structure. It can produce up to 101 rows per spectrum when the true structure is not already among the selected 100 candidates. Its results describe ranking in this constructed candidate set. For retrieval using predicted formulas without using the true SMILES to build candidates, see §5.4.
+
 ```bash
 python script/foriceberg/build_pubchem_top100_by_ecfp4_from_mgf.py \
   --mgf "${EX}/F_ICEBERG_calibrated_test10.mgf" \
@@ -295,12 +347,14 @@ export FMS2LIB="$(pwd)"
 export PYTHONPATH="${FMS2LIB}/src:${FMS2LIB}/src/foriceberg:${PYTHONPATH:-}"
 export ICEBERG_PYTHON="$(which python)"
 
-MGF=data/FMS2lib/F_ICEBERG.mgf
+MGF=data/FMS2Lib/FMS2Lib.mgf
 DATASET=F_ICEBERG_dataset
 DATA_DIR=data/foriceberg/spec_datasets/${DATASET}
 ```
 
-#### Path A — From MGF (complete pipeline)
+#### Prepare training inputs from the bundled MGF
+
+The repository provides `labels.tsv`, `spec_files.hdf5`, and `testset_split_1_labels.tsv`. The split TSV, subformula tables, and MAGMA trees are not bundled; generate them with Steps 1–3 before training. No prepared retraining archive is available. Step 1 writes the dataset files into `DATA_DIR`, including the already bundled labels and spectra; use a separate dataset name if you need to keep those files untouched during a new run.
 
 ##### Step 1 — Build dataset
 
@@ -312,6 +366,8 @@ python script/foriceberg/process_new_dataset_from_mgf_with_parentmass.py \
 ```
 
 This writes `labels.tsv`, `spec_files.hdf5`, and `splits/split_1.tsv`. `HCD` is remapped to `Orbitrap` automatically.
+
+The splitter stratifies spectrum rows by fluorine count with seed 1; it does not group by molecular connectivity. The bundled test labels share no complete InChIKeys with the remaining labels, but 14 InChIKey connectivity blocks occur in both sets. The source MGF has no collision-energy metadata, so preprocessing fills the value with `30.0`; the bundled labels use that value throughout. This is a preprocessing default, not independently verified acquisition metadata. Rebuilding a split with the supplied code has not been checked against the split used to train the bundled checkpoints.
 
 ##### Step 2 — Subformulae / intensity tables
 
@@ -340,7 +396,7 @@ python script/foriceberg/run_magma.py \
 
 ##### Step 4 — Train generation + intensity models
 
-One-shot (docx hyper-parameters):
+One-shot using the driver's configured hyperparameters:
 
 ```bash
 bash sh/foriceberg/train_from_dataset.sh \
@@ -354,7 +410,7 @@ Or the dedicated full-split driver (same stages, fixed `F_ICEBERG_dataset` paths
 bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh
 ```
 
-Manual stages (same hyper-parameters as the docx):
+Manual stages with explicit hyperparameters:
 
 ```bash
 # 4a generation model
@@ -410,34 +466,6 @@ script/foriceberg/results/dag_F_ICEBERG_dataset/.../version_0/best.ckpt
 script/foriceberg/results/dag_inten_F_ICEBERG_dataset/.../version_0/best.ckpt
 ```
 
-#### Path B — Zenodo retrain archive (skip Steps 1–3)
-
-If you already published prepared artifacts, download them and jump to training:
-
-```bash
-mkdir -p data/foriceberg/retrain
-
-# Download from your Zenodo record:
-# data/foriceberg/retrain/F_ICEBERG_retrain_artifacts.tar.gz
-# data/foriceberg/retrain/F_ICEBERG_retrain_artifacts.tar.gz.sha256
-
-echo "c1db0536f3b60bde49a99fadeec2f93bb1492b9c0acbcfc7c0a1d0bd2831de6b  data/foriceberg/retrain/F_ICEBERG_retrain_artifacts.tar.gz" | sha256sum -c -
-tar -xzf data/foriceberg/retrain/F_ICEBERG_retrain_artifacts.tar.gz
-
-export ICEBERG_PYTHON="$(which python)"
-bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh
-```
-
-The archive restores:
-
-```text
-data/foriceberg/spec_datasets/F_ICEBERG_dataset/labels.tsv
-data/foriceberg/spec_datasets/F_ICEBERG_dataset/spec_files.hdf5
-data/foriceberg/spec_datasets/F_ICEBERG_dataset/splits/split_1.tsv
-data/foriceberg/spec_datasets/F_ICEBERG_dataset/magma_outputs/magma_tree.hdf5
-data/foriceberg/spec_datasets/F_ICEBERG_dataset/subformulae/no_subform.hdf5
-```
-
 ### 5.9 HF Tag Classifier (ported from `hf-predict`)
 
 The HF binary tag training scripts are available at:
@@ -482,11 +510,11 @@ python train_tag_graph_transformer_hf.py \
 
 #### Optional — 100-spectrum smoke check
 
-To verify the same Path A commands on a tiny subset, use `data/foriceberg/examples/F_ICEBERG_train100.mgf` and set `DATASET=F_ICEBERG_train100`. That run only validates the pipeline; it is not a production model.
+To try the same preprocessing and training commands on a small subset, use `data/foriceberg/examples/F_ICEBERG_train100.mgf` and set `DATASET=F_ICEBERG_train100`. This input is intended for pipeline checks, not production model training; full training on this input has not been validated.
 
 ```bash
 python script/foriceberg/sample_mgf_subset.py \
-  --mgf data/FMS2lib/F_ICEBERG.mgf \
+  --mgf data/FMS2Lib/FMS2Lib.mgf \
   --out data/foriceberg/examples/F_ICEBERG_train100.mgf \
   --n 100 \
   --seed 1
@@ -499,23 +527,30 @@ python script/foriceberg/sample_mgf_subset.py \
 | `data/testdataset/` | Formula prediction example data |
 | `data/foriceberg/examples/` | ICEBERG example MGF, SusDat, predicted formulas, candidate CSV |
 | `data/foriceberg/examples/F_ICEBERG_train100.mgf` | 100-spectrum training smoke MGF (seed=1) |
-| `data/FMS2lib/F_ICEBERG.mgf` | Full F-ICEBERG MGF source for sampling / dataset builds |
-| `data/foriceberg/spec_datasets/F_ICEBERG_dataset/` | ICEBERG dataset files |
-| `data/foriceberg/retrain/` | Download location for the F-ICEBERG retrain archive |
+| `data/FMS2Lib/FMS2Lib.mgf` | Bundled full MGF source: 63,046 spectra, including 34,686 fluorinated entries |
+| `data/foriceberg/spec_datasets/F_ICEBERG_dataset/` | Bundled labels, spectra (Git LFS), and test labels; other training inputs are generated in §5.8 |
+| `mode/model_ms1_ms2_ranker.joblib` | Bundled molecular formula ranker |
 | `mode/foriceberg/generation/best.ckpt` | ICEBERG generation checkpoint |
 | `mode/foriceberg/intensity/best.ckpt` | ICEBERG intensity checkpoint |
-| `data/foriceberg/pubchem_formulae_inchikey.hdf5` | Downloaded PubChem HDF5 |
+| `data/foriceberg/pubchem_formulae_inchikey.hdf5` | External PubChem HDF5; download separately when needed |
+
+For per-file sources, generated inputs, and provenance still to be confirmed, see [data and model provenance](docs/DATA_AND_MODELS.md).
 
 ## 7. Notes
 
 - `torch`, `dgl`, and `torch-geometric` must match the local CUDA/Python environment.
 - PubChem HDF5 must be downloaded before workflows using `--pubchem-hdf5`.
-- MsBuddy database files download automatically on first use.
+- MSBuddy database files download automatically when initialized; network access is required if they are not cached.
 - Use `python <script.py> --help` for full options.
+- The historical directory names `mode/` and `netural_loss/` are retained because existing scripts and commands use them.
+- Default data and output paths are resolved relative to the repository. Command-line options override those defaults.
+- CPU validation covered the ten-spectrum formula example, a repeated three-candidate ICEBERG example, and a ten-spectrum end-to-end run capped at three candidates per query. GPU execution, default 400-candidate retrieval, full retraining, and article metrics were not validated; see [validation details](docs/VALIDATION.md).
+- Original FMS2Lib software and documentation use the [MIT License](LICENSE); see [third-party code and licenses](#third-party-code-and-licenses) for retained third-party terms and asset scope.
+- The optional MassFormer extension includes a platform-specific binary; see [build instructions](docs/MASSFORMER_EXTENSION.md) before using it on a different platform or Python version.
 
 ## 8. Fine-tune (100-spectrum example)
 
-Smoke fine-tune on `F_ICEBERG_train100`. First prepare the dataset with the optional 100-spectrum path in §5.8 (MGF → dataset → subformulae → MAGMA → `train_from_dataset.sh`), or reuse an existing `data/foriceberg/spec_datasets/F_ICEBERG_train100/`.
+Smoke fine-tune on `F_ICEBERG_train100`. First prepare the dataset with the optional 100-spectrum example in §5.8 (MGF → dataset → subformulae → MAGMA → `train_from_dataset.sh`), or reuse an existing `data/foriceberg/spec_datasets/F_ICEBERG_train100/`.
 
 ```bash
 cd /path/to/FMS2Lib
@@ -576,7 +611,7 @@ python script/foriceberg/finetune_inten_partial_layers.py \
   --gpu
 ```
 
-Other presets: `before_mlp` (Transformer only), `head`, `gnn`, `all`. See `script/foriceberg/README_finetune_inten_partial_layers.md`.
+Other presets: `before_mlp` (Transformer only; alias `transformer`), `head`, `gnn`, `all`. The module lists are documented in the source header and `--help` of [`finetune_inten_partial_layers.py`](script/foriceberg/finetune_inten_partial_layers.py).
 
 Output checkpoint:
 

@@ -219,9 +219,10 @@ def summarize_metrics(y_true, y_pred):
 
 
 def main():
+    repo_root = Path(__file__).resolve().parents[3]
     ap = argparse.ArgumentParser()
-    ap.add_argument("--train_csv", type=str, default="data/foriceberg/hf_predict/tag.csv")
-    ap.add_argument("--out_dir", type=str, default="script/foriceberg/results/hf_predict/output")
+    ap.add_argument("--train_csv", type=str, default=str(repo_root / "data/foriceberg/hf_predict/tag.csv"))
+    ap.add_argument("--out_dir", type=str, default=str(repo_root / "script/foriceberg/results/hf_predict/output"))
     ap.add_argument("--epochs", type=int, default=30)
     ap.add_argument("--batch_size", type=int, default=200)
     ap.add_argument("--lr", type=float, default=1e-4)

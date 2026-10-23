@@ -4,7 +4,8 @@ Goldman et al.
 Original repository:
 https://github.com/samgoldman97/ms-pred
 
-No modifications were made to the original code.
+Syntax correction: closed the selected_evs dictionary
+comprehension in dist_bin. The filtering expression is unchanged.
 
 The original copyright notice and license terms are retained.
 """
@@ -147,7 +148,7 @@ def dist_bin(cand_preds_dict: List[Dict], true_spec_dict: dict, sparse=True, ign
     true_npeaks = []
 
     if selected_evs:
-        true_spec_dict = {k: v for k, v in true_spec_dict.items() if str(k) in selected_evs
+        true_spec_dict = {k: v for k, v in true_spec_dict.items() if str(k) in selected_evs}
     true_spec_dict = {f'{float(k):.0f}': v for k, v in true_spec_dict.items()}
     cand_preds_dict = [{f'{float(k):.0f}': v for k, v in cand_dict.items()} for cand_dict in cand_preds_dict]
     

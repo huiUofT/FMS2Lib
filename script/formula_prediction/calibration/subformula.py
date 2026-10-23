@@ -25,12 +25,11 @@ from multiprocessing import Pool
 import warnings
 warnings.filterwarnings('ignore')
 
-BASE_DIR = "."
-MSBUDDY_DIR = os.path.join(BASE_DIR, "msbuddy-main")
-MGF_FILE = os.path.join(BASE_DIR, "final-database", "train_spectra-20224.mgf")
-CSV_FILE = os.path.join(BASE_DIR, "final-database", "train_spectra_with_featureid_fix.csv")
-OUTPUT_DIR = os.path.join(BASE_DIR, "final-database", "results")
-TEMP_DIR = os.path.join(BASE_DIR, "final-database", "results", "temp")
+BASE_DIR = str(Path(__file__).resolve().parents[3])
+MSBUDDY_DIR = os.path.join(BASE_DIR, "src")
+MGF_FILE = None  # Supplied through the required --mgf argument.
+OUTPUT_DIR = os.path.join(BASE_DIR, "scratch", "subformula")
+TEMP_DIR = os.path.join(OUTPUT_DIR, "temp")
 
 NUM_CORES = 6
 SAVE_INTERVAL = 30000
@@ -672,6 +671,7 @@ if __name__ == "__main__":
     else:
         current_dir = os.path.dirname(os.path.abspath(__file__))
         msbuddy_candidates = [
+            str(Path(__file__).resolve().parents[3] / "src"),
             os.path.join(current_dir, "msbuddy-main"),
             os.path.join(os.path.dirname(current_dir), "msbuddy-main"),
             os.path.join(current_dir, "..", "msbuddy-main"),

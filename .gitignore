@@ -8,6 +8,24 @@ __pycache__/
 .venv/
 venv/
 .env
+.env.*
+!.env.example
+!.env.template
+*.log
+*.out
+*.err
+*.part
+*.bak
+*.tmp
+.ipynb_checkpoints/
+.vscode/
+.idea/
+.DS_Store
+slurm-*
+logs/
+outputs/
+wandb/
+lightning_logs/
 build/
 dist/
 
@@ -23,9 +41,6 @@ src/msbuddy/data/*.joblib
 # ICEBERG F_ICEBERG_dataset: labels.tsv, spec_files.hdf5, testset_split_1_labels.tsv in git
 data/foriceberg/pubchem_formulae_inchikey.hdf5
 data/foriceberg/pubchem_formulae_inchikey.hdf5.part
-data/foriceberg/F_ICEBERG_retrain_artifacts.tar.gz
-data/foriceberg/F_ICEBERG_retrain_artifacts.tar.gz.sha256
-data/foriceberg/retrain/
 data/foriceberg/**/spec_files.hdf5.bak
 data/foriceberg/**/magma_outputs/
 data/foriceberg/**/subformulae/
@@ -34,3 +49,4 @@ data/foriceberg/**/testset_*.tsv
 !data/foriceberg/**/testset_split_1_labels.tsv
 data/foriceberg/**/trainset_*.csv
 script/foriceberg/results/
+script/formula_prediction/results/
