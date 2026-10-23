@@ -1,6 +1,6 @@
 #!/bin/bash
-# Portable: only uses paths under this ``github/`` tree (suitable for uploading ``github/`` to GitHub.com).
-# Dataset: ``github/data/spec_datasets/F_ICEBERG_dataset/`` — see ../README.md (Data layout)
+# Paths are resolved from the FMS2Lib repository root.
+# Dataset: ``data/foriceberg/spec_datasets/F_ICEBERG_dataset/`` — see ../../README.md (Data Locations)
 #
 # Optional ICEBERG venv (full checkout): **does not** auto-source parent ``activate_env.sh``
 # (that lives outside ``github/``). To load it from this wrapper:

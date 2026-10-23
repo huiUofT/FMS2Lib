@@ -35,8 +35,8 @@ def parse_args() -> argparse.Namespace:
     p.add_argument(
         "--mgf",
         type=Path,
-        default=repo_root() / "data" / "FMS2lib" / "F_ICEBERG.mgf",
-        help="Source MGF (default: data/FMS2lib/F_ICEBERG.mgf)",
+        default=repo_root() / "data" / "FMS2Lib" / "FMS2Lib.mgf",
+        help="Source MGF (default: data/FMS2Lib/FMS2Lib.mgf)",
     )
     p.add_argument(
         "--out",

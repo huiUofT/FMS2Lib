@@ -66,13 +66,13 @@ def main() -> None:
         "--gen-checkpoint",
         default=None,
         type=str,
-        help="Gen .ckpt (default: mode/generation/best.ckpt under github root if present)",
+        help="Gen .ckpt (default: mode/foriceberg/generation/best.ckpt under github root if present)",
     )
     p.add_argument(
         "--inten-checkpoint",
         default=None,
         type=str,
-        help="Inten .ckpt (default: mode/intensity/best.ckpt under github root if present)",
+        help="Inten .ckpt (default: mode/foriceberg/intensity/best.ckpt under github root if present)",
     )
     p.add_argument(
         "--dataset-labels",
@@ -82,7 +82,7 @@ def main() -> None:
     )
     p.add_argument("--save-dir", required=True, type=str, help="Predictor output dir (will contain preds.hdf5)")
     p.add_argument("--output-dir", required=True, type=str, help="Evaluator output dir (evaluation_results.tsv, etc.)")
-    p.add_argument("--dataset-name", required=True, type=str, help="Dataset folder name under data/spec_datasets/")
+    p.add_argument("--dataset-name", required=True, type=str, help="Dataset folder name under data/foriceberg/spec_datasets/")
     p.add_argument("--gpu", action="store_true")
     p.add_argument(
         "--no-adduct-shift",
@@ -141,8 +141,8 @@ def main() -> None:
                 print(
                     f"ERROR: {label} not found:\n  {ck}\n"
                     f"Relative paths are resolved from github root: {root}\n"
-                    f"Shipped defaults: ``mode/generation/best.ckpt`` and ``mode/intensity/best.ckpt``.\n"
-                    f"Or train (``bash sh/retrain_ficeberg_split1_newloc.sh``) and pass ``results/.../best.ckpt``.",
+                    f"Shipped defaults: ``mode/foriceberg/generation/best.ckpt`` and ``mode/foriceberg/intensity/best.ckpt``.\n"
+                    f"Or train (``bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh``) and pass ``results/.../best.ckpt``.",
                     file=sys.stderr,
                 )
                 sys.exit(2)

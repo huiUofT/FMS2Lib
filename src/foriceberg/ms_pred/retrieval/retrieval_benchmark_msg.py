@@ -335,7 +335,7 @@ def main(args):
     dist_fn = args.dist_fn
     ignore_parent_peak = args.ignore_parent_peak
     binned_pred = args.binned_pred
-    data_folder = Path(f"data/spec_datasets/{dataset}")
+    data_folder = Path(f"data/foriceberg/spec_datasets/{dataset}")
     form_folder = data_folder / f"subformulae/{formula_dir_name}/"
     data_df = pd.read_csv(data_folder / labels_file, sep="\t")
 

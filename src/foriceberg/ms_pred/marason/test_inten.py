@@ -47,7 +47,7 @@ def add_frag_train_args(parser):
     parser.add_argument("--dataset-labels", default="labels.tsv")
     parser.add_argument(
         "--magma-dag-folder",
-        default="data/spec_datasets/gnps2015_debug/magma_outputs/magma_tree",
+        default="data/foriceberg/spec_datasets/gnps2015_debug/magma_outputs/magma_tree",
         help="Folder to have outputs",
     )
     parser.add_argument("--split-name", default="split_1.tsv")

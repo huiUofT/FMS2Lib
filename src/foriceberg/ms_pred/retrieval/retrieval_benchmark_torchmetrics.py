@@ -228,7 +228,7 @@ def main(args):
     dist_fn = args.dist_fn
     ignore_parent_peak = args.ignore_parent_peak
     binned_pred = args.binned_pred
-    data_folder = Path(f"data/spec_datasets/{dataset}")
+    data_folder = Path(f"data/foriceberg/spec_datasets/{dataset}")
     # Avoid adding a trailing "/" here: when `formula_dir_name` points to a file like
     # `no_subform.hdf5`, appending "/" makes h5py treat it as a directory and fails.
     form_folder = data_folder / f"subformulae/{formula_dir_name}"

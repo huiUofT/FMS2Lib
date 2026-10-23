@@ -96,7 +96,7 @@ def predict():
     data_dir = Path("")
     if kwargs.get("dataset_name") is not None:
         dataset_name = kwargs["dataset_name"]
-        data_dir = Path("data/spec_datasets") / dataset_name
+        data_dir = Path("data/foriceberg/spec_datasets") / dataset_name
 
     labels = data_dir / kwargs["dataset_labels"]
 

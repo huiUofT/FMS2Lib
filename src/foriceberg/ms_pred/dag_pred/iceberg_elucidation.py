@@ -319,7 +319,7 @@ def load_real_spec(
     precursor_mass:float=None,
     nce:bool=False,
     ppm:int=20,
-    nist_path:str='data/spec_datasets/nist20/spec_files.hdf5',
+    nist_path:str='data/foriceberg/spec_datasets/nist20/spec_files.hdf5',
     denoise_spectrum:bool=False,
     intensity_threshold:float=0.05,
     **kwargs,
@@ -453,7 +453,7 @@ def elucidation_over_candidates(
     num_bins:int=15000,
     ignore_precursor:bool=True,
     dist_func:str='entropy',
-    nist_path:str='data/spec_datasets/nist20/spec_files.hdf5',
+    nist_path:str='data/foriceberg/spec_datasets/nist20/spec_files.hdf5',
     **kwargs,
 ):
     """
@@ -809,7 +809,7 @@ def modi_finder(
     ppm:int=20,
     save_path: str = None,
     axes: list = None,
-    nist_path:str='data/spec_datasets/nist20/spec_files.hdf5',
+    nist_path:str='data/foriceberg/spec_datasets/nist20/spec_files.hdf5',
 ):
     """
     ModiFinder find modification sites between two chemical compounds, whereby their mass spec are obtained and the

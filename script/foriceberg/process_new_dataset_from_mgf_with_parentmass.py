@@ -231,7 +231,7 @@ def main():
         description="Build spec_datasets from MGF with #parentmass in spec_files (aligned with F_ICEBERG_dataset)."
     )
     parser.add_argument("--mgf-file", required=True, help="Input MGF path")
-    parser.add_argument("--dataset-name", default="fluorine_dataset", help="Dataset name under data/spec_datasets/")
+    parser.add_argument("--dataset-name", default="fluorine_dataset", help="Dataset name under data/foriceberg/spec_datasets/")
     parser.add_argument("--train-frac", type=float, default=0.8, help="Train fraction")
     parser.add_argument("--val-frac", type=float, default=0.1, help="Validation fraction")
     parser.add_argument("--test-frac", type=float, default=0.1, help="Test fraction")

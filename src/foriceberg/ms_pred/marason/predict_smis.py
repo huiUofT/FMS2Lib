@@ -88,7 +88,7 @@ def get_args():
     )
     parser.add_argument(
         "--magma-dag-folder",
-        default="data/spec_datasets/gnps2015_debug/magma_outputs/magma_tree",
+        default="data/foriceberg/spec_datasets/gnps2015_debug/magma_outputs/magma_tree",
         help="Folder to have outputs",
     )
     parser.add_argument(
@@ -133,7 +133,7 @@ def predict():
     data_dir = Path("")
     if kwargs.get("dataset_name") is not None:
         dataset_name = kwargs["dataset_name"]
-        data_dir = Path("data/spec_datasets") / dataset_name
+        data_dir = Path("data/foriceberg/spec_datasets") / dataset_name
 
     labels = Path(kwargs["dataset_labels"])
 

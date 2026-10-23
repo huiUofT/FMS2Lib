@@ -70,7 +70,7 @@ def get_args():
         help="name of checkpoint file",
         default="models/pretrained/iceberg_dag_inten_msg_best.ckpt",
     )
-    parser.add_argument("--dataset-labels", default="data/spec_datasets/new_dataset/labels.tsv")
+    parser.add_argument("--dataset-labels", default="data/foriceberg/spec_datasets/new_dataset/labels.tsv")
     parser.add_argument("--max-nodes", default=15000, type=int)
     parser.add_argument("--threshold", default=0.01, type=float)
     # When some molecules contain elements not supported by MAGMA (e.g. KeyError: 'Sn'),
