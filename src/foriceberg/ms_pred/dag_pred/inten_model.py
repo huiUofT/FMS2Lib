@@ -669,7 +669,7 @@ class IntenGNN(pl.LightningModule):
         valid_pos_binned = valid_pos.transpose(1, 2)
 
         # Calc inverse indices => B x Out x L x 2 x shift
-        inverse_indices = torch.clamp(torch.bucketize(masses, self.inten_buckets, right=False), max=len(self.inten_buckets) - 1)
+        inverse_indices = torch.clamp(torch.bucketize(masses, self.inten_buckets, right=False), max=len(self.inten_buckets) - 1).long()
         inverse_indices = inverse_indices[:, None, :, :].expand(attn_weights.shape)
 
         # B x Out x (L * 2 * Mass shifts)

@@ -51,7 +51,7 @@ def data_dir() -> Path:
 
 
 def mode_dir() -> Path:
-    return repo_root() / "mode" / _SUB
+    return repo_root() / "model" / "MS2-predict"
 
 
 def sh_dir() -> Path:

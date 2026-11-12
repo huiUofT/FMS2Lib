@@ -12,10 +12,10 @@ Article: [FMS2Lib preprint, DOI 10.26434/chemrxiv.15010212/v1](https://doi.org/1
 | `data/foriceberg/spec_datasets/F_ICEBERG_dataset/testset_split_1_labels.tsv` | 6,308 test labels | A test-label list; the full train/validation/test assignment is generated separately |
 | `data/foriceberg/examples/` | Example spectra, SusDat candidates, formula predictions, and candidate tables | See the [example inventory](../data/foriceberg/examples/README.md) |
 | `data/testdataset/` | Formula prediction and neutral-loss examples, including `toxcast_cleaned_norm.mgf` | Example inputs; exact ToxCast release and cleaning provenance are not recorded |
-| `data/foriceberg/hf_predict/tag.csv` | 34,686 HF classification rows | Project classifier input |
-| `mode/model_ms1_ms2_ranker.joblib` | LightGBM formula ranker | Uses MSBuddy-derived features |
-| `mode/foriceberg/generation/best.ckpt` | ICEBERG generation model | Locally retrained checkpoint; records Lightning 2.6.1 |
-| `mode/foriceberg/intensity/best.ckpt` | ICEBERG intensity model | Locally retrained checkpoint; records Lightning 2.6.1 |
+| `data/hf_predict/hf-train.csv` | 34,686 HF classification rows | Project classifier input |
+| `model/formula-predict` | LightGBM formula ranker | Uses MSBuddy-derived features |
+| `model/MS2-predict/generation/best.ckpt` | ICEBERG generation model | Locally retrained checkpoint; records Lightning 2.6.1 |
+| `model/MS2-predict/intensity/best.ckpt` | ICEBERG intensity model | Locally retrained checkpoint; records Lightning 2.6.1 |
 
 Original software and documentation use the [MIT License](../LICENSE). Third-party terms and the scope for data and model assets are described in [third-party code and licenses](../README.md#third-party-code-and-licenses). Exact external source releases for some bundled examples and complete original training manifests are not recorded.
 
@@ -58,7 +58,7 @@ SHA-256 checksums identify the distributed assets. They provide integrity refere
 77ff499d1c76065f25e08fbf4ed74f1e99c80e64a8a6f34eaf84d9c64be1a22d  data/foriceberg/spec_datasets/F_ICEBERG_dataset/labels.tsv
 06ebceffcbdebb40401943cf31f6622e96c2702ec06f800423a793441addb59b  data/foriceberg/spec_datasets/F_ICEBERG_dataset/spec_files.hdf5
 cead7588e85c40ba15020cf3c00dbbaf6d2da42cc4b8d22fb1388dd3b0207944  data/foriceberg/spec_datasets/F_ICEBERG_dataset/testset_split_1_labels.tsv
-79a7d0f9f6f0f3bbcd33e198314234be004b442d99d035edf5368a9a52ab1d8d  mode/model_ms1_ms2_ranker.joblib
-8162a3733b5c9a000fc6aaa26be30be7cc0dab0a4f21b7699fffbc0399d16d25  mode/foriceberg/generation/best.ckpt
-637c271f53aea0fa1e41956b41c88b56bbdbcf04ccdfc1d05b884c055fd1347b  mode/foriceberg/intensity/best.ckpt
+79a7d0f9f6f0f3bbcd33e198314234be004b442d99d035edf5368a9a52ab1d8d  model/formula-predict
+8162a3733b5c9a000fc6aaa26be30be7cc0dab0a4f21b7699fffbc0399d16d25  model/MS2-predict/generation/best.ckpt
+637c271f53aea0fa1e41956b41c88b56bbdbcf04ccdfc1d05b884c055fd1347b  model/MS2-predict/intensity/best.ckpt
 ```

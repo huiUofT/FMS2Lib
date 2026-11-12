@@ -45,7 +45,7 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 NUMBA_NUM_THREADS=1 \
 python script/formula_prediction/eval/run_eval_generate_and_predict.py \
   --mgf data/foriceberg/examples/F_ICEBERG_calibrated_test10.mgf \
   --mgf-only --output-dir scratch/formula_test10 \
-  --model mode/model_ms1_ms2_ranker.joblib --no-mmap --n-cpu 1
+  --model model/formula-predict --no-mmap --n-cpu 1
 ```
 
 ```bash

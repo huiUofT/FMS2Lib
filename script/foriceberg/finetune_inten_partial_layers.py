@@ -39,7 +39,7 @@ Example::
 
     cd /path/to/FMS2Lib
     python3 script/foriceberg/finetune_inten_partial_layers.py \
-      --pretrained-checkpoint mode/foriceberg/intensity/best.ckpt \
+      --pretrained-checkpoint model/MS2-predict/intensity/best.ckpt \
       --save-dir results/inten_finetune_before_mlp \
       --preset before_mlp \
       --dataset-name F_ICEBERG_dataset \

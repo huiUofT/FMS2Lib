@@ -24,7 +24,7 @@ Method:
 
 This script calls `predict_smis_trained_inten.py` in the same directory via subprocess.
 
-When shipped under `github/`, default checkpoints resolve to `github/mode/...` (see argparse defaults).
+Default checkpoints resolve to `model/MS2-predict/generation/best.ckpt` and `model/MS2-predict/intensity/best.ckpt`.
 """
 
 from __future__ import annotations
@@ -48,9 +48,9 @@ _GITHUB_SRC = _SCRIPT_DIR.parent.parent  # .../src
 if str(_GITHUB_SRC) not in sys.path:
     sys.path.insert(0, str(_GITHUB_SRC))
 
-_GITHUB_TOP = Path(__file__).resolve().parents[3]  # parent of `src/` = `github/`
-_DEFAULT_GEN_CKPT = _GITHUB_TOP / "mode" / "generation" / "best.ckpt"
-_DEFAULT_INTEN_CKPT = _GITHUB_TOP / "mode" / "intensity" / "best.ckpt"
+_GITHUB_TOP = Path(__file__).resolve().parents[4]  # repository root
+_DEFAULT_GEN_CKPT = _GITHUB_TOP / "model" / "MS2-predict" / "generation" / "best.ckpt"
+_DEFAULT_INTEN_CKPT = _GITHUB_TOP / "model" / "MS2-predict" / "intensity" / "best.ckpt"
 
 import ms_pred.common as common  # noqa: E402
 

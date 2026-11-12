@@ -17,8 +17,8 @@ The original copyright notice and license terms are retained.
 Predict test labels then evaluate cosine similarity.
 
 Runs ``src/foriceberg/ms_pred/dag_pred/predict_smis_trained_inten.py`` then
-``evaluate_test_set.py``. Default checkpoints: ``mode/foriceberg/generation/best.ckpt``,
-``mode/foriceberg/intensity/best.ckpt``. See repo ``README.md``.
+``evaluate_test_set.py``. Default checkpoints: ``model/MS2-predict/generation/best.ckpt``,
+``model/MS2-predict/intensity/best.ckpt``. See repo ``README.md``.
 """
 from __future__ import annotations
 
@@ -66,13 +66,13 @@ def main() -> None:
         "--gen-checkpoint",
         default=None,
         type=str,
-        help="Gen .ckpt (default: mode/foriceberg/generation/best.ckpt under github root if present)",
+        help="Gen .ckpt (default: model/MS2-predict/generation/best.ckpt under github root if present)",
     )
     p.add_argument(
         "--inten-checkpoint",
         default=None,
         type=str,
-        help="Inten .ckpt (default: mode/foriceberg/intensity/best.ckpt under github root if present)",
+        help="Inten .ckpt (default: model/MS2-predict/intensity/best.ckpt under github root if present)",
     )
     p.add_argument(
         "--dataset-labels",
@@ -111,9 +111,9 @@ def main() -> None:
         mode_gen = mode_dir() / "generation" / "best.ckpt"
         mode_inten = mode_dir() / "intensity" / "best.ckpt"
         if not args.gen_checkpoint and mode_gen.is_file():
-            args.gen_checkpoint = "mode/foriceberg/generation/best.ckpt"
+            args.gen_checkpoint = "model/MS2-predict/generation/best.ckpt"
         if not args.inten_checkpoint and mode_inten.is_file():
-            args.inten_checkpoint = "mode/foriceberg/intensity/best.ckpt"
+            args.inten_checkpoint = "model/MS2-predict/intensity/best.ckpt"
         if not args.gen_checkpoint or not args.inten_checkpoint:
             print(
                 "ERROR: need --gen-checkpoint and --inten-checkpoint (unless --skip-predict).\n"
@@ -141,7 +141,7 @@ def main() -> None:
                 print(
                     f"ERROR: {label} not found:\n  {ck}\n"
                     f"Relative paths are resolved from github root: {root}\n"
-                    f"Shipped defaults: ``mode/foriceberg/generation/best.ckpt`` and ``mode/foriceberg/intensity/best.ckpt``.\n"
+                    f"Shipped defaults: ``model/MS2-predict/generation/best.ckpt`` and ``model/MS2-predict/intensity/best.ckpt``.\n"
                     f"Or train (``bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh``) and pass ``results/.../best.ckpt``.",
                     file=sys.stderr,
                 )

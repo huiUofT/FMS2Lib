@@ -513,7 +513,7 @@ def main():
         n_jobs_lgb=args.lgb_jobs,
     )
 
-    out_model = model_dir / "model_ms1_ms2_ranker.joblib"
+    out_model = model_dir / "formula-predict"
     joblib.dump(model, out_model)
     print(f"Saved model -> {out_model}")
 

@@ -831,6 +831,8 @@ def random_walk_pe(g, k, eweight_name=None):
     M = g.num_edges()  # number of edges
 
     row, col = g.edges()
+    row = row.long()
+    col = col.long()
 
     if eweight_name is None:
         value = torch.ones(M, device=device)

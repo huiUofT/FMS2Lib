@@ -4,8 +4,6 @@ Goldman et al.
 Original repository:
 https://github.com/samgoldman97/ms-pred
 
-No modifications were made to the original code.
-
 The original copyright notice and license terms are retained.
 
 train.py
@@ -21,9 +19,12 @@ import pandas as pd
 import numpy as np
 
 from torch.utils.data import DataLoader
-import resource
-rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-resource.setrlimit(resource.RLIMIT_NOFILE, (4096, rlimit[1]))
+import sys
+
+if sys.platform != "win32":
+    import resource
+    _soft, _hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+    resource.setrlimit(resource.RLIMIT_NOFILE, (min(4096, _hard), _hard))
 
 import pytorch_lightning as pl
 from pytorch_lightning import loggers as pl_loggers

@@ -24,7 +24,7 @@ Example::
 
     cd /path/to/FMS2Lib
     python3 script/foriceberg/finetune_gen_full.py \
-      --pretrained-checkpoint mode/foriceberg/generation/best.ckpt \
+      --pretrained-checkpoint model/MS2-predict/generation/best.ckpt \
       --dataset-name F_ICEBERG_dataset \
       --split-name split_1.tsv \
       --save-dir script/foriceberg/results/gen_finetune_full \

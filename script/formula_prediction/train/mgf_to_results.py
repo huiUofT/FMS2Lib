@@ -22,7 +22,7 @@ Stages (same semantics as calling generate_training_data.py then train_ranker.py
 1) Feature generation: writes under --output-dir
      X_arr.joblib, y_arr.joblib, group_arr.joblib, formula_strs.joblib, summary.log
 2) Ranker train + eval: writes under --output-dir/trained_models/ (unless --model-dir)
-     model_ms1_ms2_ranker.joblib, train_ms1_ms2_summary.txt
+     formula-predict, train_ms1_ms2_summary.txt
 
 This is supervised training/eval only: formulas must align with spectra (TXT, one formula
 per line, same order as MGF blocks). For raw MGF formula discovery without supervision,
@@ -189,7 +189,7 @@ def main(argv: list[str] | None = None) -> int:
     print(f"    X_arr.joblib | y_arr.joblib | group_arr.joblib | formula_strs.joblib")
     print(f"    summary.log")
     print(f"  ranker dir:       {mdir}")
-    print(f"    model_ms1_ms2_ranker.joblib")
+    print(f"    formula-predict")
     print(f"    train_ms1_ms2_summary.txt")
     print(f" subprocess cwd was: {cwd}")
     print("=" * 72)

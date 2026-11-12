@@ -1,0 +1,6 @@
+identifier,precursor_mz,pred_formula,pred_formula_raw,best_smiles,candidate_source,susdat_name,best_similarity,n_candidates,note
+sample_3_library_2907_DIA_MS2_precursor_EIC_precursor_310.141529580054_rt_368.442,310.141529580054,C17H18F3NO,C17H18F3NO,CNCCC(C1=CC=CC=C1)OC2=CC=C(C=C2)C(F)(F)F,susdat,Fluoxetine,0.7448776962924148,3,
+sample_3_library_2827_DIA_MS2_precursor_EIC_precursor_307.111649561966_rt_275.597,307.111649561966,C13H12F2N6O,C13H12F2N6O,OC(CN1C=NC=N1)(CN1C=NC=N1)C1=C(F)C=C(F)C=C1,susdat,Fluconazole,0.6228131655650226,1,
+sample_4_library_5396_DIA_MS2_precursor_EIC_precursor_382.083632074928_rt_413.27,382.083632074928,C17H14F3N3O2S,C17H14F3N3O2S,Cc1ccc(cc1)-c1cc(nn1-c1ccc(cc1)S(N)(=O)=O)C(F)(F)F,susdat,Celecoxib,0.49721491349392133,1,
+sample_5_library_4903_DIA_MS2_precursor_EIC_precursor_411.163083375258_rt_398.828,411.163083375258,C22H20F2N4O2,C22H20F2N4O2,Cc1ncc(OC[C@@]2(c3cccc(F)c3)C[C@H]2C(=O)Nc2ccc(F)cn2)c(C)n1,susdat,"2-{[(2,4-Dimethylpyrimidin-5-yl)oxy]methyl}-2-(3-fluorophenyl)-n-(5-fluoropyridin-2-yl)cyclopropane-1-carboxamide",0.4740484954241515,2,
+sample_4_library_3570_DIA_MS2_precursor_EIC_precursor_342.080950367724_rt_339.13,342.080950367724,C13H10F3N5O3,C13H10F3N5O3,C1=CC(=CC=C1NC(=O)ON=C(C2=NC=CN=C2)N)OC(F)(F)F,susdat,N'-({[4-(Trifluoromethoxy)anilino]carbonyl}oxy)pyrazine-2-carboximidamide,0.32985484667081655,1,
