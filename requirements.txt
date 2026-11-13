@@ -1,10 +1,5 @@
-# FMS2Lib dependency specification (CPU wheel sources; not a tested lock file).
+# FMS2Lib dependency specification.
 #   python -m pip install -r requirements.txt
-# For CUDA, install matching torch / dgl / PyG wheels for your system instead of the
-# CPU wheel-source blocks below (https://pytorch.org, https://www.dgl.ai, PyG docs).
-# Bundled ICEBERG checkpoints and the pin below are pytorch-lightning 2.6.1.
-# LightGBM 4.5.0 + scikit-learn 1.8.0 failed; scikit-learn stays below 1.8.
-# see docs/VALIDATION.md for the exact environments and validation scope.
 
 # Keep setuptools <82 (pytorch-lightning 1.x needs pkg_resources).
 setuptools>=69,<82

@@ -49,21 +49,13 @@ git lfs pull
 
 ### Environment
 
-Install Git LFS before cloning or pulling the HDF5 asset. See the [validated CPU environments and results](docs/VALIDATION.md) before installing dependencies. The following is the general dependency specification; its open-ended version ranges do not select the exact environments used in validation. Run these commands from the repository root, in a separate Python environment:
+Install Git LFS before cloning or pulling the HDF5 asset. Run these commands from the repository root, in a separate Python environment:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
-
-This repository uses a source-directory layout without Python packaging metadata. Set `PYTHONPATH` as shown below before running the workflows.
-
-Small-scale CPU inference was validated with Python 3.11. The formula environment used **LightGBM 4.5.0 and scikit-learn 1.5.2**; LightGBM 4.5.0 with scikit-learn 1.8.0 failed during prediction. The ICEBERG environment used **PyTorch 2.5.1+cpu, DGL 1.1.3**, and PyG extensions built for PyTorch 2.5 CPU. Both bundled checkpoints and `requirements.txt` use **Lightning 2.6.1**. Full training and GPU compatibility have not been validated. `requirements.txt` is a general specification rather than a tested lock file. See the [separate CPU profiles](docs/VALIDATION.md#environment-records); a combined environment has not been verified.
-
-For CUDA workflows, install `torch`, `dgl`, and `torch-geometric` wheels that match the local CUDA/Python environment. Most structure annotation examples below request a GPU explicitly; remove `--gpu` for CPU execution. The validation commands in the linked report use CPU execution and explicitly limit the candidate count for the end-to-end example.
-
-Alternate XGBoost model loading requires `xgboost`. `cairosvg` also needs the Cairo system library (`libcairo2` on Debian/Ubuntu). The fixed candidate-pool script parses `.xlsx` inputs using the Python standard library and does not require `openpyxl`.
 
 ### Environment Variables
 
@@ -85,11 +77,9 @@ This downloads:
 data/foriceberg/pubchem_formulae_inchikey.hdf5
 ```
 
-Download it before running workflows that use `--pubchem-hdf5` or regenerate PubChem candidate CSVs. This external PubChem database is separate from the bundled training spectra; there is no FMS2Lib retraining archive to download. See [data and model provenance](docs/DATA_AND_MODELS.md) for the source URL and download limitations.
-
 ## 2. Core Workflow: MS/MS to Structure Annotation
 
-For nontargeted structure annotation from an experimental MS/MS spectrum, first predict the molecular formula with the formula ranker, then retrieve candidate structures for that formula and rank them by cosine similarity to the experimental spectrum. §2.1 uses the bundled ten-spectrum set and needs PubChem because that SusDat table has no formula match. §2.2 searches only the fluorinated compounds in the NORMAN SusDat table.
+For nontargeted structure annotation from an experimental MS/MS spectrum, first predict the molecular formula with the formula ranker, then retrieve candidate structures for that formula and rank them by cosine similarity to the experimental spectrum. §2.1 uses PubChem as the candidate structure database, whereas §2.2 uses the NORMAN SusDat database.
 
 Run both examples from the repository root after setting the environment variables in §1. The formula step writes `predictions_<model-stem>.csv`. The structure step writes candidate and annotation files under `--out-dir`.
 
@@ -122,25 +112,7 @@ python script/foriceberg/blind_retrieval_from_pred_formula.py \
   --gpu
 ```
 
-The bundled example also includes a precomputed prediction CSV at `${EX}/predictions_model_ms1_ms2_ranker.csv`, which can be used directly for testing Step 2. For this ten-spectrum example, the bundled SusDat table has no candidates matching the predicted formulas, so the PubChem input is needed to obtain structure annotations. If all spectra lack candidates, the current script writes `skipped_spectra.csv` and exits with status 0 without producing the annotation CSV; inspect the outputs as well as the exit status.
-
 ### 2.2 Five experimental spectra searched among fluorinated NORMAN compounds
-
-`data/testdataset/norman_susdat_F.csv` is the candidate list for this example: 4525 fluorinated substances from the NORMAN SusDat database. Every row contains fluorine and has `formula`, `Name`, and `SMILES`. It is not the full NORMAN substance list. `data/testdataset/norman_example5.mgf` holds five experimental MS/MS spectra. No PubChem file is used.
-
-Step 1 scores formula candidates from the MGF and writes one predicted formula per spectrum. Step 2 reads that formula and keeps every fluorinated NORMAN row with the same formula. Those SMILES are the only candidate structures. ICEBERG predicts an MS/MS spectrum for each candidate. Each prediction is scored against the experimental peaks with binned cosine. The best candidate is written with `candidate_source=susdat` and the SusDat `Name`.
-
-On the recorded run, all five Top-1 hits were fluorinated NORMAN compounds and the cosine was above 0.22:
-
-| SusDat name | Predicted formula | Cosine | SusDat candidates |
-|---|---|---|---|
-| Fluoxetine | C17H18F3NO | 0.745 | 3 |
-| Fluconazole | C13H12F2N6O | 0.623 | 1 |
-| Celecoxib | C17H14F3N3O2S | 0.497 | 1 |
-| 2-{[(2,4-Dimethylpyrimidin-5-yl)oxy]methyl}-2-(3-fluorophenyl)-n-(5-fluoropyridin-2-yl)cyclopropane-1-carboxamide | C22H20F2N4O2 | 0.474 | 2 |
-| N'-({[4-(Trifluoromethoxy)anilino]carbonyl}oxy)pyrazine-2-carboximidamide | C13H10F3N5O3 | 0.330 | 1 |
-
-The recorded tables are `data/testdataset/norman_example5_predictions_formula-predict.csv` and `data/testdataset/norman_example5_blind_retrieval_top1.csv`.
 
 ```bash
 EX=data/testdataset
@@ -172,7 +144,6 @@ python script/foriceberg/blind_retrieval_from_pred_formula.py \
 | Area | Script | Purpose |
 |---|---|---|
 | Formula prediction | `script/formula_prediction/calibration/clean_mgf_file.py` | Drop low-intensity and isotope peaks from an MGF |
-| Formula prediction | `script/formula_prediction/calibration/subformula.py` | Subformula assignment helper |
 | Formula prediction | `script/formula_prediction/netural_loss/subformula.py` | Subformula assignment for neutral-loss workflow |
 | Formula prediction | `script/formula_prediction/netural_loss/calculate_inter_fragment_nl.py` | Expand inter-fragment neutral losses |
 | Formula prediction | `script/formula_prediction/netural_loss/nl_frequency_by_compound.py` | Count neutral losses per compound |
@@ -213,8 +184,6 @@ data/testdataset/
 
 ### 4.1 MGF Cleaning
 
-Drop peaks below 1% of the spectrum maximum and remove isotope peaks.
-
 ```bash
 python script/formula_prediction/calibration/clean_mgf_file.py \
   --input data/testdataset/F_ICEBERG_calibrated_test10.mgf \
@@ -223,8 +192,6 @@ python script/formula_prediction/calibration/clean_mgf_file.py \
 ```
 
 ### 4.2 Neutral-Loss Analysis
-
-Run subformula assignment, expand inter-fragment neutral losses, and summarize neutral-loss frequency by compound.
 
 ```bash
 python script/formula_prediction/netural_loss/nl_analysis_pipeline.py \
@@ -239,10 +206,6 @@ python script/formula_prediction/netural_loss/nl_analysis_pipeline.py \
 
 ### 4.3 Train Formula Ranker
 
-Generate MSBuddy features and train a LightGBM formula ranker.
-
-The ten-spectrum input below illustrates the interface. Formula-stratified splitting can leave small strata without training examples, so this is not a validated training benchmark or a replacement for a full training dataset.
-
 ```bash
 python script/formula_prediction/train/mgf_to_results.py \
   --mgf data/testdataset/F_ICEBERG_calibrated_test10.mgf \
@@ -252,10 +215,6 @@ python script/formula_prediction/train/mgf_to_results.py \
 ```
 
 ### 4.4 Evaluate Formula Ranker
-
-Generate eval features and run a trained ranker.
-
-The command below expects a model produced by §4.3. To use the bundled model instead, set `--model model/formula-predict`.
 
 ```bash
 python script/formula_prediction/eval/run_eval_generate_and_predict.py \
@@ -313,8 +272,6 @@ python script/foriceberg/run_end2end_from_mgf_susdat_onepass.py \
 
 ### 5.4 Blind Retrieval from Predicted Formula
 
-Use predicted formulas to retrieve structures from PubChem/SusDat candidates.
-
 ```bash
 python script/foriceberg/blind_retrieval_from_pred_formula.py \
   --mgf "${EX}/F_ICEBERG_calibrated_test10.mgf" \
@@ -349,35 +306,7 @@ script/foriceberg/results/pool_retrieval_mini/pool_candidate_ranking.csv
 
 `--candidates` also accepts `.xlsx` / `.tsv` with a `SMILES` / `smile` / `candidate_smiles` column.
 
-### 5.6 Retrieval Eval from Candidate CSV
-
-Evaluate candidate ranking using a prebuilt candidate CSV and experimental MGF.
-
-```bash
-python script/foriceberg/run_iceberg_retrieval_eval_evaltest.py \
-  --csv "${EX}/pubchem_top100_test10.csv" \
-  --mgf "${EX}/F_ICEBERG_calibrated_test10.mgf" \
-  --out-dir script/foriceberg/results/retrieval_mini \
-  --gen-checkpoint model/MS2-predict/generation/best.ckpt \
-  --inten-checkpoint model/MS2-predict/intensity/best.ckpt \
-  --gpu
-```
-
-### 5.7 Build PubChem Top100 Candidate CSV
-
-Generate PubChem top100 candidates by ECFP4 similarity.
-
-This benchmark uses the known true SMILES to select similar candidates and explicitly includes the true structure. It can produce up to 101 rows per spectrum when the true structure is not already among the selected 100 candidates. Its results describe ranking in this constructed candidate set. For retrieval using predicted formulas without using the true SMILES to build candidates, see §5.4.
-
-```bash
-python script/foriceberg/build_pubchem_top100_by_ecfp4_from_mgf.py \
-  --mgf "${EX}/F_ICEBERG_calibrated_test10.mgf" \
-  --pubchem-hdf5 "${PUBCHEM}" \
-  --out-csv "${EX}/pubchem_top100_test10.csv" \
-  --max-topk 100
-```
-
-### 5.8 Retrain F-ICEBERG
+### 5.6 Retrain F-ICEBERG
 
 Full retrain follows the MGF → dataset → subformulae → MAGMA → generation → intensity workflow.
 
@@ -394,10 +323,6 @@ DATASET=F_ICEBERG_dataset
 DATA_DIR=data/foriceberg/spec_datasets/${DATASET}
 ```
 
-#### Prepare training inputs from the bundled MGF
-
-The repository provides `labels.tsv`, `spec_files.hdf5`, and `testset_split_1_labels.tsv`. The split TSV, subformula tables, and MAGMA trees are not bundled; generate them with Steps 1–3 before training. No prepared retraining archive is available. Step 1 writes the dataset files into `DATA_DIR`, including the already bundled labels and spectra; use a separate dataset name if you need to keep those files untouched during a new run.
-
 ##### Step 1 — Build dataset
 
 ```bash
@@ -406,10 +331,6 @@ python script/foriceberg/process_new_dataset_from_mgf_with_parentmass.py \
   --dataset-name "${DATASET}" \
   --seed 1
 ```
-
-This writes `labels.tsv`, `spec_files.hdf5`, and `splits/split_1.tsv`. `HCD` is remapped to `Orbitrap` automatically.
-
-The splitter stratifies spectrum rows by fluorine count with seed 1; it does not group by molecular connectivity. The bundled test labels share no complete InChIKeys with the remaining labels, but 14 InChIKey connectivity blocks occur in both sets. The source MGF has no collision-energy metadata, so preprocessing fills the value with `30.0`; the bundled labels use that value throughout. This is a preprocessing default, not independently verified acquisition metadata. Rebuilding a split with the supplied code has not been checked against the split used to train the bundled checkpoints.
 
 ##### Step 2 — Subformulae / intensity tables
 
@@ -434,11 +355,7 @@ python script/foriceberg/run_magma.py \
   --workers 32
 ```
 
-`run_magma.py` also creates `magma_tree.hdf5` → `magma_tree_new.hdf5` for training.
-
 ##### Step 4 — Train generation + intensity models
-
-One-shot using the driver's configured hyperparameters:
 
 ```bash
 bash sh/foriceberg/train_from_dataset.sh \
@@ -446,13 +363,9 @@ bash sh/foriceberg/train_from_dataset.sh \
   --gpu
 ```
 
-Or the dedicated full-split driver (same stages, fixed `F_ICEBERG_dataset` paths):
-
 ```bash
 bash sh/foriceberg/retrain_ficeberg_split1_newloc.sh
 ```
-
-Manual stages with explicit hyperparameters:
 
 ```bash
 # 4a generation model
@@ -508,7 +421,7 @@ script/foriceberg/results/dag_F_ICEBERG_dataset/.../version_0/best.ckpt
 script/foriceberg/results/dag_inten_F_ICEBERG_dataset/.../version_0/best.ckpt
 ```
 
-### 5.9 HF Tag Classifier (ported from `hf-predict`)
+### 5.7 HF Tag Classifier (ported from `hf-predict`)
 
 The HF binary tag training scripts are available at:
 
@@ -552,8 +465,6 @@ python train_tag_graph_transformer_hf.py \
 
 #### Optional — 100-spectrum smoke check
 
-To try the same preprocessing and training commands on a small subset, use `data/foriceberg/examples/F_ICEBERG_train100.mgf` and set `DATASET=F_ICEBERG_train100`. This input is intended for pipeline checks, not production model training; full training on this input has not been validated.
-
 ```bash
 python script/foriceberg/sample_mgf_subset.py \
   --mgf data/FMS2Lib/FMS2Lib.mgf \
@@ -570,29 +481,25 @@ python script/foriceberg/sample_mgf_subset.py \
 | `data/foriceberg/examples/` | ICEBERG example MGF, SusDat, predicted formulas, candidate CSV |
 | `data/foriceberg/examples/F_ICEBERG_train100.mgf` | 100-spectrum training smoke MGF (seed=1) |
 | `data/FMS2Lib/FMS2Lib.mgf` | Bundled full MGF source: 63,046 spectra, including 34,686 fluorinated entries |
-| `data/foriceberg/spec_datasets/F_ICEBERG_dataset/` | Bundled labels, spectra (Git LFS), and test labels; other training inputs are generated in §5.8 |
+| `data/foriceberg/spec_datasets/F_ICEBERG_dataset/` | Bundled labels, spectra (Git LFS), and test labels; other training inputs are generated in §5.6 |
 | `model/formula-predict` | Bundled molecular formula ranker |
 | `model/MS2-predict/generation/best.ckpt` | ICEBERG generation checkpoint |
 | `model/MS2-predict/intensity/best.ckpt` | ICEBERG intensity checkpoint |
-| `data/foriceberg/pubchem_formulae_inchikey.hdf5` | External PubChem HDF5; download separately when needed |
+| `data/foriceberg/pubchem_formulae_inchikey.hdf5` | External PubChem HDF5 |
 
 For per-file sources, generated inputs, and provenance still to be confirmed, see [data and model provenance](docs/DATA_AND_MODELS.md).
 
 ## 7. Notes
 
-- `torch`, `dgl`, and `torch-geometric` must match the local CUDA/Python environment.
-- PubChem HDF5 must be downloaded before workflows using `--pubchem-hdf5`.
 - MSBuddy database files download automatically when initialized; network access is required if they are not cached.
 - Use `python <script.py> --help` for full options.
 - Checkpoints live under `model/`. The historical directory name `netural_loss/` is retained because existing scripts and commands use it.
 - Default data and output paths are resolved relative to the repository. Command-line options override those defaults.
-- CPU validation covered the ten-spectrum formula example, a repeated three-candidate ICEBERG example, and a ten-spectrum end-to-end run capped at three candidates per query. GPU execution, default 400-candidate retrieval, full retraining, and article metrics were not validated; see [validation details](docs/VALIDATION.md).
 - Original FMS2Lib software and documentation use the [MIT License](LICENSE); see [third-party code and licenses](#third-party-code-and-licenses) for retained third-party terms and asset scope.
-- The optional MassFormer extension includes a platform-specific binary; see [build instructions](docs/MASSFORMER_EXTENSION.md) before using it on a different platform or Python version.
 
 ## 8. Fine-tune (100-spectrum example)
 
-Smoke fine-tune on `F_ICEBERG_train100`. First prepare the dataset with the optional 100-spectrum example in §5.8 (MGF → dataset → subformulae → MAGMA → `train_from_dataset.sh`), or reuse an existing `data/foriceberg/spec_datasets/F_ICEBERG_train100/`.
+Smoke fine-tune on `F_ICEBERG_train100`. First prepare the dataset with the optional 100-spectrum example in §5.6 (MGF → dataset → subformulae → MAGMA → `train_from_dataset.sh`), or reuse an existing `data/foriceberg/spec_datasets/F_ICEBERG_train100/`.
 
 ```bash
 cd /path/to/FMS2Lib
@@ -601,7 +508,7 @@ export PYTHONPATH="${FMS2LIB}/src:${FMS2LIB}/src/foriceberg:${PYTHONPATH:-}"
 
 DATASET=F_ICEBERG_train100
 DATA_DIR=data/foriceberg/spec_datasets/${DATASET}
-# Intensity DAG from §5.8 train_from_dataset (adjust if your run name differs):
+# Intensity DAG from §5.6 train_from_dataset (adjust if your run name differs):
 INTEN_DAG=script/foriceberg/results/dag_${DATASET}/${DATASET}_rnd1_docx/preds_train_100_inten.hdf5
 ```
 
@@ -629,7 +536,7 @@ script/foriceberg/results/gen_finetune_F_ICEBERG_train100/version_0/best.ckpt
 
 ### 8.2 Intensity model (partial-layer fine-tune)
 
-Requires `--magma-dag-folder` (predicted DAGs with intensities), e.g. `preds_train_100_inten.hdf5` from §5.8.
+Requires `--magma-dag-folder` (predicted DAGs with intensities), e.g. `preds_train_100_inten.hdf5` from §5.6.
 
 ```bash
 # List IntenGNN modules / presets
